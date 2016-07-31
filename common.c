@@ -10,28 +10,17 @@ void terror(const char * err_msg){
 /* 	This function compares two arrays of unsigned chars with the same length.
  *  @param w1: first array to be compared.
  *  @param w2: second array to be compared.
- *  @param n: length of BOTH arrays.
+ *  @param n: length of BOTH arrays (MUST BE multiple of 4).
  *  @retun a positive number if w1>w2, a negative number if w1<w2 and zero if they are equal.
  */
  
-int wordcmp(unsigned char *w1, unsigned char *w2, int n) {
-    int i = 0, limit;
-
-    if (n % 4 != 0) {
-        w1[n / 4] = w1[n / 4] >> (2 * (3 - ((n - 1) % 4)));
-        w1[n / 4] = w1[n / 4] << (2 * (3 - ((n - 1) % 4)));
-        w2[n / 4] = w2[n / 4] >> (2 * (3 - ((n - 1) % 4)));
-        w2[n / 4] = w2[n / 4] << (2 * (3 - ((n - 1) % 4)));
-        limit = (n / 4) + 1;
-    } else {
-        limit = n / 4;
-    }
-
-    for (i = 0; i < limit; i++) {
-        if (w1[i] < w2[i]) return -1;
-        if (w1[i] > w2[i]) return +1;
-    }
-    return 0;
+int wordcmp(const unsigned char *w1, const unsigned char *w2, int n) {
+	int i = 0;
+	for (i=0;i<n/4;i++) {
+		if (w1[i]<w2[i]) return -1;
+		if (w1[i]>w2[i]) return +1;
+	}
+	return 0;
 }
 
 /* 	This function is used to shift left bits in a unsigned char array
@@ -128,4 +117,16 @@ void showWord(const char * b, char * kmer, uint16_t WORD_LENGTH) {
 	kmer[32]='\0';
 }
 
+/*
+	Convert the last two bits of a single compressed letter to uncompressed
+	@b:	A byte whose last 2 bits encode a letter
+	
+	Returns the corresponding char 
+*/
 
+char bitsToChar(unsigned char b){
+	if((b & 3) == 3) return 'T';
+	if((b & 3) == 2) return 'G';
+	if((b & 3) == 1) return 'C';
+	if((b & 3) == 0) return 'A';
+}

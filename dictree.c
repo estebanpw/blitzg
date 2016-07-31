@@ -21,9 +21,9 @@ int main(int argc, char ** av){
 	//Variables to read kmers
 	char c = 'N'; //Char to read characters
 
-	unsigned char b[8], M[8];
+	unsigned char b[8];//, M[8];
 	memset(b, 0, BYTES_IN_WORD);
-	memset(M, 0, BYTES_IN_WORD);
+	//memset(M, 0, BYTES_IN_WORD);
 	
 	//Variables to account for positions
 	int firstTime, i, totalSeqs = 0, isOverlappingNode = 0, KPOS = 0;
@@ -47,11 +47,12 @@ int main(int argc, char ** av){
 						//Compress word into 8 bytes
 						shift_word_left(b);
 						addNucleotideToWord(b, 'f', c);	
-						shift_word_left(M);
-						addNucleotideToWord(M, 'f', c);
+						//shift_word_left(M);
+						//addNucleotideToWord(M, 'f', c);
 						firstTime++;
 					} 
 				}
+				KPOS = 0; //Reset for non overlapping node
 			}else{
 				//We already had the first kmer
 				c = fgetc(database);
@@ -75,9 +76,12 @@ int main(int argc, char ** av){
 				root = createTree(b);
 				totalSeqs++; // First node created
 			}else{
+				//We will have an overlapping node 
 				isOverlappingNode = (KPOS != KSIZE) ? 1 : 0;
+				//printf("Sending overlapping: %d\n", isOverlappingNode);
 				lookForWordAndInsert(b, root, isOverlappingNode);
-				if(isOverlappingNode == 0) KPOS = 0;
+				//If the
+				if(isOverlappingNode == 0) KPOS = -1;
 			}
 		}
 		

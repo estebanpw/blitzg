@@ -4,7 +4,6 @@
 #include "structs.h"
 
 Node_N * createTree(const char * word);
-void linkNode(void * son, void * parent, const char LoR, const int _case);
 Node_N * insertNode_N(const char * word);
 Node_S * insertNode_S(const char letter);
 int lookForWordAndInsert(const char * word, Node_N * root, int isOverlapping);

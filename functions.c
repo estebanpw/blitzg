@@ -23,56 +23,6 @@ Node_N * createTree(const char * word){
 }
 
 /*
-	Links a left or right node to a parent node
-	@son:	The node (either Node_N or Node_S) to be linked to a parent
-	@parent:	The parent node to which the son will be linked
-	@LoR:	Whether the node to be linked is a left or right leave. Can be 'l' for left and 'r' for right
-	@_case:	An integer representing the possible combination of void pointers 1:[NN], 2:[NS], 3:[SN], 4:[SS] where N is a Node_N and S is a Node_S
-*/
-
-void linkNode(void * son, void * parent, const char LoR, const int _case){
-	
-	switch(_case){
-
-		case 1: {
-			if(LoR == 'l'){
-				((Node_N *) parent)->left = (Node_N *) son;	
-			}else{
-				((Node_N *) parent)->right = (Node_N *) son;
-			}
-			break;
-		}
-		
-			
-		case 2: {
-			if(LoR == 'l'){
-				((Node_N *) parent)->left = (Node_S *) son;	
-			}else{
-				((Node_N *) parent)->right = (Node_S *) son;
-			}
-			break;
-		}
-		case 3: {
-			if(LoR == 'l'){
-				((Node_S *) parent)->left = (Node_N *) son;	
-			}else{
-				((Node_S *) parent)->right = (Node_N *) son;
-			}
-			break;
-		}
-		case 4: {
-			if(LoR == 'l'){
-				((Node_S *) parent)->left = (Node_S *) son;	
-			}else{
-				((Node_S *) parent)->right = (Node_S *) son;
-			}
-			break;
-		}
-	}
-	
-}
-
-/*
 	Creates a Node_N ready to be inserted
 	@word:	The word for the Node_N
 	
@@ -86,6 +36,11 @@ Node_N * insertNode_N(const char * word){
 	aux->left = NULL;
 	aux->right = NULL;
 	aux->type = 0;
+	
+	//char RESULT[32];
+	//showWord(word, RESULT, 32);
+	//printf("WORD	%s\n", RESULT);
+	//getchar();
 	return aux;
 }
 
@@ -103,6 +58,11 @@ Node_S * insertNode_S(const char letter){
 	aux->left = NULL;
 	aux->right = NULL;
 	aux->type = 1;
+	
+	//printf("Inserted %c\n", bitsToChar(letter));
+	//printf("Inserted %c\n", bitsToChar(aux->b));
+	//getchar();
+	
 	return aux;
 }
 
@@ -123,33 +83,40 @@ int lookForWordAndInsert(const char * word, Node_N * root, int isOverlapping){
 	void * parent;
 	
 	
-	unsigned int searchRes = binarySearchNodes(word, root, &parent);
-	unsigned int newType;
-	
+	int searchRes = binarySearchNodes(word, root, &parent);
+	int newType;
 	
 	
 	newType = getTypeOfNode(parent);
 	
 	if(searchRes == 0){
 		//Exact match exist, should be added to Positions table 
+		//printf("Exact match!!!\n");
+		//getchar();
 		//TODO
 		return 0;
 	}else if(searchRes < 0){ //Node has to be inserted as left son of newNode
-		if(isOverlapping == 0){ 
-			//A non overlapping node [case NN, case NS]
-			if(newType == 0) ((Node_N *) parent)->left = insertNode_N(word); else ((Node_N *) parent)->left = insertNode_S(getLastChar(word));
+		//printf("Inserted left\n");
+		//getchar();
+		if(isOverlapping == 1){
+			//An overlapping node [case NS, case SS]
+			if(newType == 0) ((Node_N *) parent)->left = insertNode_S(getLastChar(word)); else ((Node_S *) parent)->left = insertNode_S(getLastChar(word));
+			
 		}else{
-			//An overlapping node [case SN, case SS]
-			if(newType == 0) ((Node_S *) parent)->left = insertNode_N(word); else ((Node_S *) parent)->left = insertNode_S(getLastChar(word));
+			//A non overlapping node [case NN, case SN]
+			if(newType == 0) ((Node_N *) parent)->left = insertNode_N(word); else ((Node_S *) parent)->left = insertNode_N(word);
 		}
+		
 		return -1;
 	}else if(searchRes > 0){ //Node has to be inserted as right son of newNode
-		if(isOverlapping == 0){ 
-			//A non overlapping node [case NN, case NS]
-			if(newType == 0) ((Node_N *) parent)->right = insertNode_N(word); else ((Node_N *) parent)->right = insertNode_S(getLastChar(word));
+		//printf("Inserted to the right\n");
+		//getchar();
+		if(isOverlapping == 1){
+			//An overlapping node [case NS, case SS]
+			if(newType == 0) ((Node_N *) parent)->right = insertNode_S(getLastChar(word)); else ((Node_S *) parent)->right = insertNode_S(getLastChar(word));
 		}else{
-			//An overlapping node [case SN, case SS]
-			if(newType == 0) ((Node_S *) parent)->right = insertNode_N(word); else ((Node_S *) parent)->right = insertNode_S(getLastChar(word));
+			//A non overlapping node [case NN, case SN]
+			if(newType == 0) ((Node_N *) parent)->right = insertNode_N(word); else ((Node_S *) parent)->right = insertNode_N(word);
 		}
 		return 1;
 	}
@@ -175,35 +142,32 @@ int binarySearchNodes(const char * query, Node_N * root, void ** found){
 	
 	
 	
-	unsigned int haveMatch = 0, queryComp, auxPos;
-	unsigned char currWord[BYTES_IN_WORD], queryWord[BYTES_IN_WORD], auxWord[BYTES_IN_WORD], mixWord[BYTES_IN_WORD];
-	memcpy(queryWord, query, BYTES_IN_WORD);
+	int queryComp;
+	unsigned char currWord[BYTES_IN_WORD], strange[BYTES_IN_WORD]; //Why???
+	memset(strange, 0, BYTES_IN_WORD);
 	
 	char RESULT[32];
-	showWord(query, RESULT, 32);
-	printf("START	%s\n", RESULT); 
-	showWord(root->b, RESULT, 32);
-	printf("ROOTO	%s\n", RESULT); 
 	
 	
-	while(current != NULL && haveMatch == 0){
-		
+	
+	while(current != NULL){
+		//printf("Is null current? :  %d\n", (current == NULL));
 		//Cast to correct type of Node
 		if(getTypeOfNode(current) == 0){ //Type Non-overlapping
 			//Cast and copy word into temp array
 			castNCurr = (Node_N *) current;
 			//The word is copied new because it is a non overlapping node that will hold a complete type
 			memcpy(currWord, castNCurr->b, BYTES_IN_WORD);
-			auxPos = 0; //Position for the overlapping nodes in the auxiliary word
 			
 			//Comparison
 			
-			showWord(queryWord, RESULT, 32);
-			printf("Got 	%s\n", RESULT); 
-			showWord(castNCurr->b, RESULT, 32);
-			printf("Comp to	%s\n", RESULT);
-			queryComp = wordcmp(queryWord, castNCurr->b, BYTES_IN_WORD);
-			getchar();
+			//showWord(query, RESULT, 32);
+			//printf("Got 	%s\n", RESULT); 
+			//showWord(castNCurr->b, RESULT, 32);
+			//printf("Comp to	%s\n", RESULT);
+			queryComp = wordcmp(query, castNCurr->b, 32);
+			//printf("Comparison: %d++++++++++++\n", queryComp);
+			//getchar();
 			if(queryComp == 0){ //Exact match
 				*found = (void *) castNCurr;
 				return 0;
@@ -219,14 +183,21 @@ int binarySearchNodes(const char * query, Node_N * root, void ** found){
 			castSCurr = (Node_S *) current;	
 			
 			//We just have to add one byte to auxWord
-			auxWord[auxPos++] = castSCurr->b;
-			auxWord[auxPos] = '\0';
-			//Create the real current word by mixing currWord and auxWord
-			strncpy(mixWord, currWord+auxPos, 32-auxPos); //Copy right side of the currWord
-			strncpy(mixWord+auxPos+1, auxWord, auxPos); //Copy the left side of the newly-added chars word
+			shift_word_left(currWord);
+			//printf("the shift: %c\n", bitsToChar(castSCurr->b));
+			addNucleotideToWord(currWord, 'f', bitsToChar(castSCurr->b));
+			
+			
+			//showWord(query, RESULT, 32);
+			//printf("Got 	%s\n", RESULT); 
+			//showWord(currWord, RESULT, 32);
+			//printf("Comp to	%s\n", RESULT);
 			
 			//Comparison
-			queryComp = wordcmp(queryWord, mixWord, BYTES_IN_WORD);
+			queryComp = wordcmp(query, currWord, 32);
+			
+			//printf("Comparison: %d-------------\n", queryComp);
+			//getchar();
 			
 			if(queryComp == 0){ //Exact match
 				*found = (void *) castSCurr;
@@ -241,6 +212,7 @@ int binarySearchNodes(const char * query, Node_N * root, void ** found){
 		} 
 	}
 	//Return queryComp to tell whether the new node should be added to left or right son. The node "found" points to the last node
+	//printf("Value of queryComp: %d\n", queryComp);
 	return queryComp;
 }
 
@@ -286,6 +258,7 @@ void showNode_N(const Node_N * node){
 	char kmer[32];
 	showWord(node->b, kmer, BYTES_IN_WORD*4);
 	fprintf(stdout, "NODE_N:->:%p\n	Word::%s\n	Look-up::%"PRIu32"\n", node, kmer, node->n_ltable);
+	//getchar();
 }
 
 /*
@@ -293,12 +266,8 @@ void showNode_N(const Node_N * node){
 */
 
 void showNode_S(const Node_S * node){
-	char kmer[BYTES_IN_WORD];
-	char finalMer[BYTES_IN_WORD];
-	kmer[31] = node->b;
-	kmer[32] = '\0';
-	showWord(kmer, finalMer, BYTES_IN_WORD*4);
-	fprintf(stdout, "NODE_S:->:%p\n	Word::%s\n	Look-up::%"PRIu32"\n", node, finalMer, node->n_ltable);
+	fprintf(stdout, "NODE_S:->:%p\n	Word::%c\n	Look-up::%"PRIu32"\n", node, bitsToChar(node->b), node->n_ltable);
+	//getchar();
 }
 
 /*
@@ -312,15 +281,14 @@ void preOrderTraverse(void * n){
 	if(getTypeOfNode(n) == 0){ //Type Non-overlapping
 		castNCurr = (Node_N *) n;
 		showNode_N(castNCurr);
-		if(castNCurr->left != NULL) preOrderTraverse(castNCurr->left);
-		if(castNCurr->right != NULL) preOrderTraverse(castNCurr->right);
+		if(castNCurr->left != NULL) preOrderTraverse((void *)castNCurr->left);
+		if(castNCurr->right != NULL) preOrderTraverse((void *)castNCurr->right);
 	}else{
 		castSCurr = (Node_S *) n;
 		showNode_S(castSCurr);
-		if(castSCurr->left != NULL) preOrderTraverse(castSCurr->left);
-		if(castSCurr->right != NULL) preOrderTraverse(castSCurr->right);
+		if(castSCurr->left != NULL) preOrderTraverse((void *)castSCurr->left);
+		if(castSCurr->right != NULL) preOrderTraverse((void *)castSCurr->right);
 	}
-	
 }
 
 
