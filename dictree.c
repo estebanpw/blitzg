@@ -14,6 +14,8 @@ int main(int argc, char ** av){
 	//First node of the tree
 	Node_N * root;
 	
+	printf("Size of Node_N: %d\nSize of Node_S: %d \n", sizeof(Node_N), sizeof(Node_S));
+	
 	//Open database
 	database = fopen64(av[1], "rt");
 	if(database == NULL) terror("Could not open database");
@@ -47,9 +49,8 @@ int main(int argc, char ** av){
 						//Compress word into 8 bytes
 						shift_word_left(b);
 						addNucleotideToWord(b, 'f', c);	
-						//shift_word_left(M);
-						//addNucleotideToWord(M, 'f', c);
 						firstTime++;
+						pos++;
 					} 
 				}
 				KPOS = 0; //Reset for non overlapping node
@@ -58,13 +59,9 @@ int main(int argc, char ** av){
 				c = fgetc(database);
 				while(!feof(database) && !( c >= 'A' && c <= 'Z')) c = fgetc(database); //Read until next good character
 				KPOS++; //To tell when the node is overlapping or not
-
+				pos++;
 				shift_word_left(b);
 				addNucleotideToWord(b, 'f', c);
-				
-				//showWord(b, RESULT, 32);
-				//printf("WORD	%s\n", RESULT);
-				
 				
 			}
 			
@@ -84,12 +81,12 @@ int main(int argc, char ** av){
 				if(isOverlappingNode == 0) KPOS = -1;
 			}
 		}
-		
+		fprintf(stdout, "Sequence of length %"PRIu64" has %"PRIu64" mers of size k=%d\n", pos, pos-KSIZE+1, KSIZE);
 		
 	}
 	
-	preOrderTraverse(root);
-	
+	//preOrderTraverse(root);
+	ramUsage(-1);
 	fclose(database);
 	
 	

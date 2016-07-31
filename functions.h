@@ -14,3 +14,4 @@ void addWordToS_Node(Node_S * node, const unsigned char b);
 void showNode_N(const Node_N * node);
 void showNode_S(const Node_S * node);
 void preOrderTraverse(void * n);
+void ramUsage(int typeOfNode);

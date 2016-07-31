@@ -4,6 +4,9 @@
 #include "functions.h"
 #include "common.h"
 
+unsigned int tbytes = 0;
+
+
 /*
 	Creates a tree with only a root node without word yet and whose position in the lookup table of repetitions is 0
 	@root:	A non overlapping node that will become the root of the tree
@@ -19,6 +22,9 @@ Node_N * createTree(const char * word){
 	root->right = NULL;
 	root->type = 0;
 	memcpy(root->b, word, BYTES_IN_WORD);
+	
+	ramUsage(0);
+	
 	return root;
 }
 
@@ -41,6 +47,8 @@ Node_N * insertNode_N(const char * word){
 	//showWord(word, RESULT, 32);
 	//printf("WORD	%s\n", RESULT);
 	//getchar();
+	ramUsage(0);
+	
 	return aux;
 }
 
@@ -62,6 +70,7 @@ Node_S * insertNode_S(const char letter){
 	//printf("Inserted %c\n", bitsToChar(letter));
 	//printf("Inserted %c\n", bitsToChar(aux->b));
 	//getchar();
+	ramUsage(1);
 	
 	return aux;
 }
@@ -292,6 +301,20 @@ void preOrderTraverse(void * n){
 }
 
 
+/*
+	Calculates the RAM usage by the tree
+	
+*/
+
+void ramUsage(int typeOfNode){
+	if(typeOfNode == 0) tbytes += sizeof(Node_N);
+	if(typeOfNode == 1) tbytes += sizeof(Node_S);
+	//printing
+	if(typeOfNode == -1) {
+		printf("Current RAM usage: 	%d bytes - %d kilobytes - %d megabytes\n", tbytes, tbytes/1024, tbytes/(1024*1024));
+	}
+	
+}
 
 
 
