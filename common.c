@@ -60,6 +60,16 @@ void shift_word_right(unsigned char * b) {
     b[i] >>= 2;
 }
 
+/*
+	Returns the last character of  a correctly compressed word
+*/
+
+unsigned char getLastChar(const unsigned char * b){
+	
+	return b[BYTES_IN_WORD-1] & 3;
+}
+
+
 /*	Adds a 2-bit compressed char to a char array (word) previously shifted
 	@b:	The word where the nucleotide will be added
 	@strand:	'f' if we are calculating the forward kmers or 'r' if reverse
@@ -115,7 +125,7 @@ void showWord(const char * b, char * kmer, uint16_t WORD_LENGTH) {
 		c = c >> 6;
 		kmer[4*i+3] = Alf[(int) c];
 	}
-	kmer[WORD_LENGTH*4]='\0';
+	kmer[32]='\0';
 }
 
 
