@@ -15,6 +15,8 @@ int main(int argc, char ** av){
 	Node_N * root;
 	
 	printf("Size of Node_N: %d\nSize of Node_S: %d \n", sizeof(Node_N), sizeof(Node_S));
+	void * headOfMem = oneTimeMalloc(2000, KSIZE); //Use headOfMem to deallocate
+	void * memPointer = headOfMem;
 	
 	//Open database
 	database = fopen64(av[1], "rt");
@@ -76,7 +78,7 @@ int main(int argc, char ** av){
 				//We will have an overlapping node 
 				isOverlappingNode = (KPOS != KSIZE) ? 1 : 0;
 				//printf("Sending overlapping: %d\n", isOverlappingNode);
-				lookForWordAndInsert(b, root, isOverlappingNode);
+				lookForWordAndInsert(b, root, isOverlappingNode, &memPointer);
 				//If the
 				if(isOverlappingNode == 0) KPOS = -1;
 			}
@@ -90,7 +92,7 @@ int main(int argc, char ** av){
 	fclose(database);
 	
 	
-	
+	free(headOfMem);
 	
 	/*
 	unsigned char kmer[32] = "CCCCCCCCTTTTTTTTCCCCCCCCGGGGGGGG";
@@ -139,7 +141,6 @@ int main(int argc, char ** av){
 	
 	printf("type of root %d\n",getTypeOfNode((void *) root));
 	*/
-	getchar();
 	
 	return 0;
 }

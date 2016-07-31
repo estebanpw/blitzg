@@ -15,3 +15,5 @@ void showNode_N(const Node_N * node);
 void showNode_S(const Node_S * node);
 void preOrderTraverse(void * n);
 void ramUsage(int typeOfNode);
+void * oneTimeMalloc(uint64_t seqlen, uint16_t ksize);
+void * askForMem(int typeOfNode, void ** currMem);

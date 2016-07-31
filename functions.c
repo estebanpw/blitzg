@@ -4,8 +4,6 @@
 #include "functions.h"
 #include "common.h"
 
-unsigned int tbytes = 0;
-
 
 /*
 	Creates a tree with only a root node without word yet and whose position in the lookup table of repetitions is 0
@@ -307,6 +305,7 @@ void preOrderTraverse(void * n){
 */
 
 void ramUsage(int typeOfNode){
+	static uint64_t tbytes = 0;
 	if(typeOfNode == 0) tbytes += sizeof(Node_N);
 	if(typeOfNode == 1) tbytes += sizeof(Node_S);
 	//printing
@@ -317,7 +316,37 @@ void ramUsage(int typeOfNode){
 }
 
 
+/*
+	One-time malloc that allocates the memory needed for a sequence of length n and kmer size m
+	@seqlen:	Sequence length in nucleotides
+	@ksize:	Kmer size
+	
+	Returns a void pointer to the first position of the allocated block of memory
+*/
 
+void * oneTimeMalloc(uint64_t seqlen, uint16_t ksize){
+	uint64_t tnode_n = seqlen/ksize;
+	uint64_t tnode_s = (seqlen-ksize+1) - tnode_n;
+	uint64_t totalAlloc = tnode_n*sizeof(Node_N)+tnode_s*sizeof(Node_S);
+	printf("Allocating %"PRIu64" bytes (%"PRIu64" MB) for %"PRIu64" nodes_n and %"PRIu64" nodes_s\nSequence length %"PRIu64"\nK-size = %"PRIu16"\n", totalAlloc, totalAlloc/(1024*1024), tnode_n, tnode_s, seqlen, ksize);
+	
+	void * memPointer = (void *) malloc(totalAlloc);
+	if(memPointer == NULL) terror("Could not allocate memory for binary tree");
+	return memPointer;
+}
+
+void * askForMem(int typeOfNode, void ** currMem){
+	
+	if(typeOfNode == 0){
+		*currMem += sizeof(Node_N);	
+		return (currMem - sizeof(Node_N));
+	} 
+	if(typeOfNode == 1){
+		*currMem += sizeof(Node_S);	
+		return (currMem - sizeof(Node_S));
+	}
+	terror("Bad type of node...\n");
+}
 
 
 
