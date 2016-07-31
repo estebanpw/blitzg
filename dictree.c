@@ -15,8 +15,8 @@ int main(int argc, char ** av){
 	Node_N * root;
 	
 	printf("Size of Node_N: %d\nSize of Node_S: %d \n", sizeof(Node_N), sizeof(Node_S));
-	void * headOfMem = oneTimeMalloc(2000, KSIZE); //Use headOfMem to deallocate
-	void * memPointer = headOfMem;
+	char * headOfMem = oneTimeMalloc(2000, KSIZE); //Use headOfMem to deallocate
+	char * memPointer = headOfMem;
 	
 	//Open database
 	database = fopen64(av[1], "rt");
@@ -72,7 +72,7 @@ int main(int argc, char ** av){
 			
 			
 			if(totalSeqs == 0){ //If its the first sequence -> first node
-				root = createTree(b);
+				root = createTree(b, &memPointer);
 				totalSeqs++; // First node created
 			}else{
 				//We will have an overlapping node 
@@ -102,45 +102,28 @@ int main(int argc, char ** av){
 		addNucleotideToWord(b, 'f', kmer[i]);
 	}
 	
-	shift_word_left(b);
-	addNucleotideToWord(b, 'f', 'T');
+	printf("memPointer at start %p\n", memPointer);
+	root = createTree(b, &memPointer);
 	
-	char RESULT[32];
-	showWord(b, RESULT, 32);
-	printf("WORD	%s\n", RESULT);
+	shift_word_left(b);
+	addNucleotideToWord(b, 'f', 'C');
+	
+	printf("after root Pointer at start %p\n", memPointer);
+	Node_N * prueba = insertNode_N(b, &memPointer);
+	printf("after extra memPointer at start %p\n", memPointer);
+	
 	shift_word_left(b);
 	addNucleotideToWord(b, 'f', 'A');
-	shift_word_left(b);
 	
-	showWord(b, RESULT, 32);
-	printf("WORD	%s\n", RESULT);
-	addNucleotideToWord(b, 'f', 'C');
-
-	
-	
-	
-	
-	showWord(b, RESULT, 32);
-	printf("WORD	%s\n", RESULT);
-	
-	
-	
-	
-	
-	
-	
-	
-	root = createTree(b);
-	
+	Node_N * prueba2 = insertNode_N(b, &memPointer);
+	printf("aftersecond extra memPointer at start %p\n", memPointer);
 	
 	showNode_N(root);
+	showNode_N(prueba);
+	showNode_N(prueba2);
 	
-	
-	
-	fprintf(stdout, "Last: %d (should be a %c)\n", getLastChar(b), kmer[31]);
-	
-	printf("type of root %d\n",getTypeOfNode((void *) root));
 	*/
+	
 	
 	return 0;
 }

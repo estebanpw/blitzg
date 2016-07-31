@@ -11,9 +11,10 @@
 	@word:	The non overlapping word that will be the root of the tree
 */
 
-Node_N * createTree(const char * word){
+Node_N * createTree(const char * word, char ** memPointer){
 
-	Node_N * root = (Node_N *) malloc(sizeof(Node_N));
+	//Node_N * root = (Node_N *) malloc(sizeof(Node_N));
+	Node_N * root = (Node_N *) askForMem(0, memPointer);
 	if(root == NULL) terror("Could not allocate root node");
 	root->n_ltable = 0;
 	root->left = NULL;
@@ -33,8 +34,9 @@ Node_N * createTree(const char * word){
 	Returns	a pointer to newly allocated node
 */
 
-Node_N * insertNode_N(const char * word){
-	Node_N * aux = (Node_N *) malloc(sizeof(Node_N));
+Node_N * insertNode_N(const char * word, char ** memPointer){
+	//Node_N * aux = (Node_N *) malloc(sizeof(Node_N));
+	Node_N * aux = (Node_N *) askForMem(0, memPointer);
 	aux->n_ltable = 0; //TODO
 	memcpy(aux->b, word, BYTES_IN_WORD);
 	aux->left = NULL;
@@ -57,8 +59,9 @@ Node_N * insertNode_N(const char * word){
 	Returns	a pointer to newly allocated node
 */
 
-Node_S * insertNode_S(const char letter){
-	Node_S * aux = (Node_S *) malloc(sizeof(Node_S));
+Node_S * insertNode_S(const char letter, char ** memPointer){
+	//Node_S * aux = (Node_S *) malloc(sizeof(Node_S));
+	Node_S * aux = (Node_S *) askForMem(1, memPointer);
 	aux->n_ltable = 0; //TODO
 	aux->b = letter;
 	aux->left = NULL;
@@ -86,7 +89,7 @@ Node_S * insertNode_S(const char letter){
 			-1 if the node was inserted as left son
 */
 
-int lookForWordAndInsert(const char * word, Node_N * root, int isOverlapping){
+int lookForWordAndInsert(const char * word, Node_N * root, int isOverlapping, char ** memPointer){
 	void * parent;
 	
 	
@@ -107,11 +110,11 @@ int lookForWordAndInsert(const char * word, Node_N * root, int isOverlapping){
 		//getchar();
 		if(isOverlapping == 1){
 			//An overlapping node [case NS, case SS]
-			if(newType == 0) ((Node_N *) parent)->left = insertNode_S(getLastChar(word)); else ((Node_S *) parent)->left = insertNode_S(getLastChar(word));
+			if(newType == 0) ((Node_N *) parent)->left = insertNode_S(getLastChar(word), memPointer); else ((Node_S *) parent)->left = insertNode_S(getLastChar(word), memPointer);
 			
 		}else{
 			//A non overlapping node [case NN, case SN]
-			if(newType == 0) ((Node_N *) parent)->left = insertNode_N(word); else ((Node_S *) parent)->left = insertNode_N(word);
+			if(newType == 0) ((Node_N *) parent)->left = insertNode_N(word, memPointer); else ((Node_S *) parent)->left = insertNode_N(word, memPointer);
 		}
 		
 		return -1;
@@ -120,10 +123,10 @@ int lookForWordAndInsert(const char * word, Node_N * root, int isOverlapping){
 		//getchar();
 		if(isOverlapping == 1){
 			//An overlapping node [case NS, case SS]
-			if(newType == 0) ((Node_N *) parent)->right = insertNode_S(getLastChar(word)); else ((Node_S *) parent)->right = insertNode_S(getLastChar(word));
+			if(newType == 0) ((Node_N *) parent)->right = insertNode_S(getLastChar(word), memPointer); else ((Node_S *) parent)->right = insertNode_S(getLastChar(word), memPointer);
 		}else{
 			//A non overlapping node [case NN, case SN]
-			if(newType == 0) ((Node_N *) parent)->right = insertNode_N(word); else ((Node_S *) parent)->right = insertNode_N(word);
+			if(newType == 0) ((Node_N *) parent)->right = insertNode_N(word, memPointer); else ((Node_S *) parent)->right = insertNode_N(word, memPointer);
 		}
 		return 1;
 	}
@@ -324,26 +327,35 @@ void ramUsage(int typeOfNode){
 	Returns a void pointer to the first position of the allocated block of memory
 */
 
-void * oneTimeMalloc(uint64_t seqlen, uint16_t ksize){
+char * oneTimeMalloc(uint64_t seqlen, uint16_t ksize){
 	uint64_t tnode_n = seqlen/ksize;
 	uint64_t tnode_s = (seqlen-ksize+1) - tnode_n;
 	uint64_t totalAlloc = tnode_n*sizeof(Node_N)+tnode_s*sizeof(Node_S);
 	printf("Allocating %"PRIu64" bytes (%"PRIu64" MB) for %"PRIu64" nodes_n and %"PRIu64" nodes_s\nSequence length %"PRIu64"\nK-size = %"PRIu16"\n", totalAlloc, totalAlloc/(1024*1024), tnode_n, tnode_s, seqlen, ksize);
 	
-	void * memPointer = (void *) malloc(totalAlloc);
+	char * memPointer = (char *) malloc(totalAlloc*sizeof(char));
 	if(memPointer == NULL) terror("Could not allocate memory for binary tree");
 	return memPointer;
 }
 
-void * askForMem(int typeOfNode, void ** currMem){
+/*
+	This functions returns the next free position in the block of memory
+	@typeOfNode:	Whether its a Node_N (0) or a Node_S (1)
+	@currMem:		The current position of the memory pointer
+	
+	Returns a void pointer to the new position
+*/
+
+
+char * askForMem(int typeOfNode, char ** currMem){
 	
 	if(typeOfNode == 0){
-		*currMem += sizeof(Node_N);	
-		return (currMem - sizeof(Node_N));
+		*currMem += sizeof(Node_N);		
+		return (*currMem - sizeof(Node_N));
 	} 
 	if(typeOfNode == 1){
 		*currMem += sizeof(Node_S);	
-		return (currMem - sizeof(Node_S));
+		return (*currMem - sizeof(Node_S));
 	}
 	terror("Bad type of node...\n");
 }
