@@ -3,11 +3,12 @@
 #include <inttypes.h>
 
 #define BYTES_IN_WORD 8
+#define KSIZE 32
 #pragma pack(push, 1)
 
 /*
-Currently they look mostly the same.
-The point is that Node_S would not need a seq indicator, therefore using 15 bytes less.
+	I believe I can remove the n_ltable atributte. Would it not be possible to number nodes according 
+	to the maximum size and depth of the tree?
 */
 
 typedef struct node_o{
@@ -27,8 +28,10 @@ typedef struct node_no{
 	void * right;	//Right son
 } Node_N;
 
-
-
+typedef struct node_list{
+	uint32_t pos;
+	uint32_t offsetNext;
+} l_item;
 
 
 
