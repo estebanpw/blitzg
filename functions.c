@@ -4,8 +4,6 @@
 #include "functions.h"
 #include "common.h"
 
-unsigned int tbytes = 0;
-
 
 /*
 	Creates a tree with only a root node without word yet and whose position in the lookup table of repetitions is 0
@@ -13,16 +11,16 @@ unsigned int tbytes = 0;
 	@word:	The non overlapping word that will be the root of the tree
 */
 
-Node_N * createTree(const char * word){
+Node_N * createTree(const char * word, char ** memPointer, char * basePosMem){
 
-	Node_N * root = (Node_N *) malloc(sizeof(Node_N));
+	//Node_N * root = (Node_N *) malloc(sizeof(Node_N));
+	Node_N * root = (Node_N *) askForMem(0, memPointer);
 	if(root == NULL) terror("Could not allocate root node");
-	root->n_ltable = 0;
 	root->left = NULL;
 	root->right = NULL;
 	root->type = 0;
 	memcpy(root->b, word, BYTES_IN_WORD);
-	
+	setFirstPosition(root, 0, basePosMem);
 	ramUsage(0);
 	
 	return root;
@@ -31,22 +29,20 @@ Node_N * createTree(const char * word){
 /*
 	Creates a Node_N ready to be inserted
 	@word:	The word for the Node_N
+	@memPointer:	Char pointer to the current position of the memory index
 	
 	Returns	a pointer to newly allocated node
 */
 
-Node_N * insertNode_N(const char * word){
-	Node_N * aux = (Node_N *) malloc(sizeof(Node_N));
-	aux->n_ltable = 0; //TODO
+Node_N * insertNode_N(const char * word, char ** memPointer, char * basePosMem, uint32_t pos){
+	//Node_N * aux = (Node_N *) malloc(sizeof(Node_N));
+	Node_N * aux = (Node_N *) askForMem(0, memPointer);
 	memcpy(aux->b, word, BYTES_IN_WORD);
 	aux->left = NULL;
 	aux->right = NULL;
 	aux->type = 0;
+	setFirstPosition(aux, pos, basePosMem);
 	
-	//char RESULT[32];
-	//showWord(word, RESULT, 32);
-	//printf("WORD	%s\n", RESULT);
-	//getchar();
 	ramUsage(0);
 	
 	return aux;
@@ -55,21 +51,19 @@ Node_N * insertNode_N(const char * word){
 /*
 	Creates a Node_S ready to be inserted
 	@letter:	The letter that added up to the k-1 letters from the ancesters forms a complete word
+	@memPointer:	Char pointer to the current position of the memory index
 	
 	Returns	a pointer to newly allocated node
 */
 
-Node_S * insertNode_S(const char letter){
-	Node_S * aux = (Node_S *) malloc(sizeof(Node_S));
-	aux->n_ltable = 0; //TODO
+Node_S * insertNode_S(const char letter, char ** memPointer, char * basePosMem, uint32_t pos){
+	//Node_S * aux = (Node_S *) malloc(sizeof(Node_S));
+	Node_S * aux = (Node_S *) askForMem(1, memPointer);
 	aux->b = letter;
 	aux->left = NULL;
 	aux->right = NULL;
 	aux->type = 1;
-	
-	//printf("Inserted %c\n", bitsToChar(letter));
-	//printf("Inserted %c\n", bitsToChar(aux->b));
-	//getchar();
+	setFirstPosition(aux, pos, basePosMem);
 	ramUsage(1);
 	
 	return aux;
@@ -82,15 +76,19 @@ Node_S * insertNode_S(const char letter){
 	@root:	The root node of the binary tree
 	@isOverlapping:	0 if it is a Non-overlapping node
 					1 if it is an overlapping node
+	@memPointer:	A char pointer to the position in memory of the last word added
 	
 	Returns	0 if there is an exact match
 			1 if the node was inserted as right son
 			-1 if the node was inserted as left son
 */
 
-int lookForWordAndInsert(const char * word, Node_N * root, int isOverlapping){
+int lookForWordAndInsert(const char * word, Node_N * root, int isOverlapping, char ** memPointer, char * basePosMem, uint32_t pos){
 	void * parent;
 	
+	//printf("==============\n");
+	//traverseTreeAndPositions((void *)root, basePosMem);
+	//printf("==============\n");
 	
 	int searchRes = binarySearchNodes(word, root, &parent);
 	int newType;
@@ -100,20 +98,22 @@ int lookForWordAndInsert(const char * word, Node_N * root, int isOverlapping){
 	
 	if(searchRes == 0){
 		//Exact match exist, should be added to Positions table 
-		//printf("Exact match!!!\n");
+		//printf("Exact match!!!@%"PRIu32"\n", pos);
+		linkNewPos(parent, basePosMem, pos);
+		ramUsage(2);
 		//getchar();
-		//TODO
+
 		return 0;
 	}else if(searchRes < 0){ //Node has to be inserted as left son of newNode
 		//printf("Inserted left\n");
 		//getchar();
 		if(isOverlapping == 1){
 			//An overlapping node [case NS, case SS]
-			if(newType == 0) ((Node_N *) parent)->left = insertNode_S(getLastChar(word)); else ((Node_S *) parent)->left = insertNode_S(getLastChar(word));
+			if(newType == 0) ((Node_N *) parent)->left = insertNode_S(getLastChar(word), memPointer, basePosMem, pos); else ((Node_S *) parent)->left = insertNode_S(getLastChar(word), memPointer, basePosMem, pos);
 			
 		}else{
 			//A non overlapping node [case NN, case SN]
-			if(newType == 0) ((Node_N *) parent)->left = insertNode_N(word); else ((Node_S *) parent)->left = insertNode_N(word);
+			if(newType == 0) ((Node_N *) parent)->left = insertNode_N(word, memPointer, basePosMem, pos); else ((Node_S *) parent)->left = insertNode_N(word, memPointer, basePosMem, pos);
 		}
 		
 		return -1;
@@ -122,10 +122,10 @@ int lookForWordAndInsert(const char * word, Node_N * root, int isOverlapping){
 		//getchar();
 		if(isOverlapping == 1){
 			//An overlapping node [case NS, case SS]
-			if(newType == 0) ((Node_N *) parent)->right = insertNode_S(getLastChar(word)); else ((Node_S *) parent)->right = insertNode_S(getLastChar(word));
+			if(newType == 0) ((Node_N *) parent)->right = insertNode_S(getLastChar(word), memPointer, basePosMem, pos); else ((Node_S *) parent)->right = insertNode_S(getLastChar(word), memPointer, basePosMem, pos);
 		}else{
 			//A non overlapping node [case NN, case SN]
-			if(newType == 0) ((Node_N *) parent)->right = insertNode_N(word); else ((Node_S *) parent)->right = insertNode_N(word);
+			if(newType == 0) ((Node_N *) parent)->right = insertNode_N(word, memPointer, basePosMem, pos); else ((Node_S *) parent)->right = insertNode_N(word, memPointer, basePosMem, pos);
 		}
 		return 1;
 	}
@@ -196,7 +196,7 @@ int binarySearchNodes(const char * query, Node_N * root, void ** found){
 			//printf("the shift: %c\n", bitsToChar(castSCurr->b));
 			addNucleotideToWord(currWord, 'f', bitsToChar(castSCurr->b));
 			
-			
+
 			//showWord(query, RESULT, 32);
 			//printf("Got 	%s\n", RESULT); 
 			//showWord(currWord, RESULT, 32);
@@ -307,8 +307,10 @@ void preOrderTraverse(void * n){
 */
 
 void ramUsage(int typeOfNode){
-	if(typeOfNode == 0) tbytes += sizeof(Node_N);
-	if(typeOfNode == 1) tbytes += sizeof(Node_S);
+	static uint64_t tbytes = 0;
+	if(typeOfNode == 0) tbytes += sizeof(Node_N) + sizeof(l_item);
+	if(typeOfNode == 1) tbytes += sizeof(Node_S) + sizeof(l_item);
+	if(typeOfNode == 2) tbytes += sizeof(l_item);
 	//printing
 	if(typeOfNode == -1) {
 		printf("Current RAM usage: 	%d bytes - %d kilobytes - %d megabytes\n", tbytes, tbytes/1024, tbytes/(1024*1024));
@@ -317,8 +319,195 @@ void ramUsage(int typeOfNode){
 }
 
 
+/*
+	One-time malloc that allocates the memory needed for a sequence of length n and kmer size m
+	@bytes:	Total bytes to be allocated
+	@ksize:	Kmer size
+	
+	Returns a char pointer to the first position of the allocated block of memory
+*/
+
+char * oneTimeMalloc(uint64_t bytes, uint16_t ksize){
+	uint64_t tnode_n = bytes/ksize;
+	uint64_t tnode_s = (bytes-ksize+1) - tnode_n;
+	uint64_t totalAlloc = tnode_n*sizeof(Node_N)+tnode_s*sizeof(Node_S);
+	printf("Allocating %"PRIu64" bytes (%"PRIu64" MB) for %"PRIu64" nodes_n and %"PRIu64" nodes_s\nSequence length %"PRIu64"\nK-size = %"PRIu16"\n", totalAlloc, totalAlloc/(1024*1024), tnode_n, tnode_s, bytes, ksize);
+	
+	char * memPointer = (char *) malloc(totalAlloc*sizeof(char));
+	if(memPointer == NULL) terror("Could not allocate memory for binary tree");
+	return memPointer;
+}
+
+/*
+	This functions returns the next free position in the block of memory
+	@typeOfNode:	Whether its a Node_N (0) or a Node_S (1)
+	@currMem:		The current position of the memory pointer
+	
+	Returns a void pointer to the new position
+*/
 
 
+char * askForMem(int typeOfNode, char ** currMem){
+	
+	if(typeOfNode == 0){
+		*currMem += sizeof(Node_N);		
+		return (*currMem - sizeof(Node_N));
+	} 
+	if(typeOfNode == 1){
+		*currMem += sizeof(Node_S);	
+		return (*currMem - sizeof(Node_S));
+	}
+	terror("Bad type of node: memory get for new tree node \n");
+}
 
+/*
+	Allocates memory to hold all kmer positions needed
+	@totalMers:	total number of kmers
+	
+	Returns a pointer to the allocated region
+*/
 
+char * allocMemoryForPositions(uint32_t totalMers){
+	char * mem = (char *) malloc(totalMers * sizeof(l_item));
+	if(mem == NULL) terror("Could not allocate memory for kmers positions");
+	return mem;
+}
 
+/*
+	Gets the next free position for an l_item by returning the offset that has to be added to the base memory pointer
+*/
+
+uint32_t getPositionOffset(){
+	static uint32_t consumed = 0;
+	consumed += sizeof(l_item); //Each position consumes the size of an l_item
+	return (consumed - sizeof(l_item));
+}
+
+/*
+	For a newly created tree node, sets the node offset to the current one, calculates what absolute pointer position
+	should the kmer position be stored in and stores it
+	@node:	A void pointer to a node_N or node_S
+	@pos:	The kmer position
+	@baseMem:	An absolute pointer to the starting position of the allocated heap for positions
+*/
+
+void setFirstPosition(void * node, uint32_t pos, char * baseMem){
+	uint32_t posOff = getPositionOffset();
+	if(getTypeOfNode(node) == 0){
+		((Node_N *) node)->n_ltable = posOff;
+	}else{
+		((Node_S *) node)->n_ltable = posOff;
+	}
+	
+	l_item * aux = (l_item *) (baseMem+(uint64_t)posOff);
+	aux->pos = pos;
+	aux->offsetNext = 0; //So we know there is not a next one
+}
+
+/*
+	Returns the first position where a kmer appears
+	@offsetPos:	The offset base position from the node struct
+	@baseMem:	The pointer to the allocated memory
+	
+	Returns the position in the fasta file
+*/
+
+uint32_t getPosOfNode(uint32_t offsetPos, char * baseMem){
+	l_item * aux = (l_item *) (baseMem + (uint64_t)offsetPos);
+	return aux->pos;
+}
+
+/*
+	Links a new position to a offset-based linked list of positions
+	@node:	The node for which to add a new position
+	@baseMem:	The offset pointer to the memory heap of positions
+	@pos:	The position in the fasta sequence to add
+*/
+
+void linkNewPos(void * node, char * baseMem, uint32_t pos){
+	l_item * aux;
+	int typeOfNode = getTypeOfNode(node);
+	
+	
+	//Convert to l_item the first position
+	if(typeOfNode == 0){
+		aux = (l_item *) (baseMem + (uint64_t)(((Node_N *) node)->n_ltable));
+	}else{
+		aux = (l_item *) (baseMem + (uint64_t)(((Node_S *) node)->n_ltable));
+	}
+	
+	
+	
+	while(aux->offsetNext != 0){ //Until we find the last positions node
+		
+		aux = (l_item *) (baseMem + (uint64_t)aux->offsetNext);
+		
+	}
+	//We are at the last allocated node
+	
+	
+	aux->offsetNext = getPositionOffset(); //next free position
+	
+	aux = (l_item *) (baseMem + (uint64_t)aux->offsetNext);
+	aux->pos = pos;
+	aux->offsetNext = 0;
+	
+}
+
+/*
+	Traverses a list of offset-based linked lists
+	@node	The node for which to traverse the positions
+	@baseMem	The offset for the allocated heap of positions
+*/
+
+void traversePosLists(void * node, char * baseMem){
+	l_item * aux;
+	int typeOfNode = getTypeOfNode(node);
+	
+	//Convert to l_item the first position
+	if(typeOfNode == 0){
+		aux = (l_item *) (baseMem + ((Node_N *) node)->n_ltable);
+		//printf("POS: %"PRIu32", ", aux->pos);
+		printf("POS: %"PRIu32, getPosOfNode(((Node_N *) node)->n_ltable, baseMem));
+		//printf("At %p\n", aux);
+		
+	}else{
+		aux = (l_item *) (baseMem + ((Node_S *) node)->n_ltable);
+		//printf("POS: %"PRIu32", ", aux->pos);
+		printf("POS: %"PRIu32, getPosOfNode(((Node_S *) node)->n_ltable, baseMem));
+		//printf("At %p\n", aux);
+		
+	}
+	while(aux->offsetNext != 0){ //Until we find the last positions node
+		//currPosId = aux->offsetNext;
+		aux = (l_item *) (baseMem + (uint64_t)aux->offsetNext);
+		printf(", %"PRIu32"\n", aux->pos);
+		
+		getchar();
+		//printf("At %p\n", aux);
+	}
+	printf("\n");
+}
+
+/*
+	Traverses the tree in preorder and shows the list of positions for each node
+	@n:	The node from which to traverse
+	@baseMem:	The offset pointer to the positions block of memory
+*/
+
+void traverseTreeAndPositions(void * n, char * baseMem){
+	Node_N * castNCurr;
+	Node_S * castSCurr;
+	traversePosLists(n, baseMem);
+	if(getTypeOfNode(n) == 0){ //Type Non-overlapping
+		castNCurr = (Node_N *) n;
+		showNode_N(castNCurr);
+		if(castNCurr->left != NULL) traverseTreeAndPositions((void *) castNCurr->left, baseMem);	
+		if(castNCurr->right != NULL) traverseTreeAndPositions((void *) castNCurr->right, baseMem);
+	}else{ //Type overlapping
+		castSCurr = (Node_S *) n;
+		showNode_S(castSCurr);
+		if(castSCurr->left != NULL) traverseTreeAndPositions((void *) castSCurr->left, baseMem);	
+		if(castSCurr->right != NULL) traverseTreeAndPositions((void *) castSCurr->right, baseMem);	
+	}
+}
