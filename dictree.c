@@ -4,9 +4,12 @@
 #include "functions.h"
 #include "common.h"
 
-#define KSIZE 32
 
 int main(int argc, char ** av){
+	
+	if(argc != 2) terror("USE: dictree db");
+	
+	
 	
 	//Database to read kmers from
 	FILE * database;
@@ -14,11 +17,23 @@ int main(int argc, char ** av){
 	//First node of the tree
 	Node_N * root;
 	
-	printf("Size of Node_N: %d\nSize of Node_S: %d \n", sizeof(Node_N), sizeof(Node_S));
-	
 	//Open database
 	database = fopen64(av[1], "rt");
 	if(database == NULL) terror("Could not open database");
+	
+	//Get size of db
+	fseeko64(database, 0L, SEEK_END);
+	uint64_t totalSize = ftello64(database);
+	fseeko64(database, 0L, SEEK_SET);
+	
+	//One-time heap allocation
+	char * headOfMem = oneTimeMalloc(totalSize, KSIZE); //Use headOfMem to deallocate
+	char * memPointer = headOfMem;
+	char * basePosMem = allocMemoryForPositions(totalSize); //heap for positions list
+	printf("Estimated size of database: %"PRIu64"\n", totalSize);
+	printf("Size of Node_N: %d\nSize of Node_S: %d \n", sizeof(Node_N), sizeof(Node_S));
+	printf("Nodes heap starts at %p\nPositons heap starts at %p\n", headOfMem, basePosMem);
+	
 	
 	//Variables to read kmers
 	char c = 'N'; //Char to read characters
@@ -29,9 +44,7 @@ int main(int argc, char ** av){
 	
 	//Variables to account for positions
 	int firstTime, i, totalSeqs = 0, isOverlappingNode = 0, KPOS = 0;
-	uint64_t pos = 0;
-	
-	unsigned char RESULT[32];
+	uint32_t pos = 0; //Up to 500*10^6 mers, should be enough
 	
 	while(!feof(database)){
 		//Skip until finding sequence identifier
@@ -70,18 +83,17 @@ int main(int argc, char ** av){
 			
 			
 			if(totalSeqs == 0){ //If its the first sequence -> first node
-				root = createTree(b);
+				root = createTree(b, &memPointer, basePosMem);
 				totalSeqs++; // First node created
 			}else{
-				//We will have an overlapping node 
+				//We will have a non overlapping node when KPOS equals the kmer size (i.e. every k nodes)
 				isOverlappingNode = (KPOS != KSIZE) ? 1 : 0;
-				//printf("Sending overlapping: %d\n", isOverlappingNode);
-				lookForWordAndInsert(b, root, isOverlappingNode);
-				//If the
+				lookForWordAndInsert(b, root, isOverlappingNode, &memPointer, basePosMem, pos - KSIZE);
+				//If we just had a non overlapping node, reset KPOS to zero to have another k overlapping nodes
 				if(isOverlappingNode == 0) KPOS = -1;
 			}
 		}
-		fprintf(stdout, "Sequence of length %"PRIu64" has %"PRIu64" mers of size k=%d\n", pos, pos-KSIZE+1, KSIZE);
+		fprintf(stdout, "Sequence of length %"PRIu64" has %"PRIu64" mers of size k=%d\n", pos, pos-KSIZE, KSIZE);
 		
 	}
 	
@@ -90,9 +102,12 @@ int main(int argc, char ** av){
 	fclose(database);
 	
 	
+	//traverseTreeAndPositions((void *) root, basePosMem);
 	
-	
+	free(headOfMem);
+	free(basePosMem);
 	/*
+	unsigned char RESULT[32];
 	unsigned char kmer[32] = "CCCCCCCCTTTTTTTTCCCCCCCCGGGGGGGG";
 	
 	for(i=0;i<32;i++){
@@ -100,47 +115,56 @@ int main(int argc, char ** av){
 		addNucleotideToWord(b, 'f', kmer[i]);
 	}
 	
-	shift_word_left(b);
-	addNucleotideToWord(b, 'f', 'T');
+	printf("memPointer at start %p\n", memPointer);
+	root = createTree(b, &memPointer, basePosMem);
 	
-	char RESULT[32];
-	showWord(b, RESULT, 32);
-	printf("WORD	%s\n", RESULT);
+	printf("Root nltable: %"PRIu32"\n", root->n_ltable);
+	printf("Root position appearence is %"PRIu32"\n", getPosOfNode(root->n_ltable, basePosMem));
+	
+	
+	
+	
+	linkNewPos((void *) root, basePosMem, 1500);
+	linkNewPos((void *) root, basePosMem, 32000);
+	
+	//traversePosLists((void *)root, basePosMem);	
+	
+	
+	
+	shift_word_left(b);
+	addNucleotideToWord(b, 'f', 'C');
+	
+	Node_N * prueba = insertNode_N(b, &memPointer, basePosMem, 32);
+	printf("Prueba position appearence is %"PRIu32"\n", getPosOfNode(prueba->n_ltable, basePosMem));
+	
+	linkNewPos((void *) prueba, basePosMem, 1234);
+	
+	
+	Node_N * otro = insertNode_N(b, &memPointer, basePosMem, 99);
+	
+	
+	linkNewPos((void *) prueba, basePosMem, 666666);
+	
+	traversePosLists((void *)root, basePosMem);	
+	traversePosLists((void *)prueba, basePosMem);	
+	traversePosLists((void *)otro, basePosMem);
+	//traversePosLists((void *)root, basePosMem);	
+	
+	*/
+	
+	/*
 	shift_word_left(b);
 	addNucleotideToWord(b, 'f', 'A');
-	shift_word_left(b);
 	
-	showWord(b, RESULT, 32);
-	printf("WORD	%s\n", RESULT);
-	addNucleotideToWord(b, 'f', 'C');
-
-	
-	
-	
-	
-	showWord(b, RESULT, 32);
-	printf("WORD	%s\n", RESULT);
-	
-	
-	
-	
-	
-	
-	
-	
-	root = createTree(b);
-	
+	Node_N * prueba2 = insertNode_N(b, &memPointer);
+	printf("aftersecond extra memPointer at start %p\n", memPointer);
 	
 	showNode_N(root);
-	
-	
-	
-	fprintf(stdout, "Last: %d (should be a %c)\n", getLastChar(b), kmer[31]);
-	
-	printf("type of root %d\n",getTypeOfNode((void *) root));
+	showNode_N(prueba);
+	showNode_N(prueba2);
 	*/
-	getchar();
+	
+	
 	
 	return 0;
 }
-
