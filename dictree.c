@@ -5,14 +5,15 @@
 #include "common.h"
 
 
+
 int main(int argc, char ** av){
 	
-	if(argc != 2) terror("USE: dictree db");
+	if(argc != 3) terror("USE: dictree db dbout");
 	
 	
 	
-	//Database to read kmers from
-	FILE * database;
+	//Database to read kmers from and output dictionary
+	FILE * database, * dout;
 	
 	//First node of the tree
 	Node_N * root;
@@ -21,18 +22,24 @@ int main(int argc, char ** av){
 	database = fopen64(av[1], "rt");
 	if(database == NULL) terror("Could not open database");
 	
+	//Out database
+	dout = fopen64(av[2], "wt");
+	if(dout == NULL) terror("Could not open output database dictionary");
+	
 	//Get size of db
 	fseeko64(database, 0L, SEEK_END);
 	uint64_t totalSize = ftello64(database);
 	fseeko64(database, 0L, SEEK_SET);
 	
+	//Create table to store offset pointers
+	basePtrTab bpt;
+	bpt.lastP = 0;
+	
+	
 	//One-time heap allocation
-	char * headOfMem = oneTimeMalloc(totalSize, KSIZE); //Use headOfMem to deallocate
-	char * memPointer = headOfMem;
+	
+	addHeapLevel(&bpt, UINT32_MAX/2, 1);
 	char * basePosMem = allocMemoryForPositions(totalSize); //heap for positions list
-	printf("Estimated size of database: %"PRIu64"\n", totalSize);
-	printf("Size of Node_N: %d\nSize of Node_S: %d \n", sizeof(Node_N), sizeof(Node_S));
-	printf("Nodes heap starts at %p\nPositons heap starts at %p\n", headOfMem, basePosMem);
 	
 	
 	//Variables to read kmers
@@ -45,7 +52,7 @@ int main(int argc, char ** av){
 	//Variables to account for positions
 	int firstTime, i, totalSeqs = 0, isOverlappingNode = 0, KPOS = 0;
 	uint32_t pos = 0; //Up to 500*10^6 mers, should be enough
-	
+	fprintf(stdout, "[INFO] Computing tree of mers\n");
 	while(!feof(database)){
 		//Skip until finding sequence identifier
 		while(!feof(database) && c != '>') c = fgetc(database);
@@ -66,12 +73,10 @@ int main(int argc, char ** av){
 						pos++;
 					} 
 				}
-				KPOS = 0; //Reset for non overlapping node
 			}else{
 				//We already had the first kmer
 				c = fgetc(database);
 				while(!feof(database) && !( c >= 'A' && c <= 'Z')) c = fgetc(database); //Read until next good character
-				KPOS++; //To tell when the node is overlapping or not
 				pos++;
 				shift_word_left(b);
 				addNucleotideToWord(b, 'f', c);
@@ -83,28 +88,33 @@ int main(int argc, char ** av){
 			
 			
 			if(totalSeqs == 0){ //If its the first sequence -> first node
-				root = createTree(b, &memPointer, basePosMem);
+				root = createTree(b, &bpt, basePosMem);
 				totalSeqs++; // First node created
 			}else{
-				//We will have a non overlapping node when KPOS equals the kmer size (i.e. every k nodes)
-				isOverlappingNode = (KPOS != KSIZE) ? 1 : 0;
-				lookForWordAndInsert(b, root, isOverlappingNode, &memPointer, basePosMem, pos - KSIZE);
-				//If we just had a non overlapping node, reset KPOS to zero to have another k overlapping nodes
-				if(isOverlappingNode == 0) KPOS = -1;
+				lookForWordAndInsert(b, root, &bpt, basePosMem, pos - KSIZE);
 			}
 		}
-		fprintf(stdout, "Sequence of length %"PRIu64" has %"PRIu64" mers of size k=%d\n", pos, pos-KSIZE, KSIZE);
+		fprintf(stdout, "[INFO] Sequence of length %"PRIu64" has %"PRIu64" mers of size k=%d\n", pos, pos-KSIZE, KSIZE);
 		
 	}
-	
-	//preOrderTraverse(root);
-	ramUsage(-1);
-	fclose(database);
 	
 	
 	//traverseTreeAndPositions((void *) root, basePosMem);
 	
-	free(headOfMem);
+	getchar();
+	//Write dictionary
+	fprintf(stdout, "[INFO] Writing dictionary to file\n");
+	
+	//traverseTreeAndPositions(root, basePosMem, &bpt);
+	
+	//writeDictionary(root, basePosMem, dout, &bpt);
+	writeDictionary(root, basePosMem, stdout, &bpt);
+	
+	ramUsage(-1);
+	fclose(database);
+	fclose(dout);
+	
+	freeNodesMem(&bpt);
 	free(basePosMem);
 	/*
 	unsigned char RESULT[32];
