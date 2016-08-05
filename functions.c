@@ -470,11 +470,15 @@ uint32_t getPosOfNode(uint32_t offsetPos, char * baseMem){
 */
 
 void linkNewPos(Node_N * node, char * baseMem, uint32_t pos){
-	l_item * aux;
-	
+	l_item * first;
+	//l_item * aux;
+	l_item * next;
+	uint32_t offsetFirst;
 	
 	//Convert to l_item the first position
-	aux = (l_item *) (baseMem + ((uint64_t)(node)->n_ltable));
+	first = (l_item *) (baseMem + ((uint64_t)(node)->n_ltable));
+	//aux = first;
+	offsetFirst = first->offsetNext;
 	/*
 	if(typeOfNode == 0){
 		aux = (l_item *) (baseMem + ((uint64_t)((Node_N *) node)->n_ltable));
@@ -483,20 +487,24 @@ void linkNewPos(Node_N * node, char * baseMem, uint32_t pos){
 	}
 	*/
 	
-	
-	while(aux->offsetNext != 0){ //Until we find the last positions node
+	/*
+	if(aux->offsetNext != 0){ //Get second position
 		
 		aux = (l_item *) (baseMem + (uint64_t)aux->offsetNext);
 		
 	}
-	//We are at the last allocated node
+	*/
+	//aux holds the second position, insert now between first and second to make complexity O(2)
 	
 	
-	aux->offsetNext = getPositionOffset(); //next free position
+	first->offsetNext = getPositionOffset(); //next free position
+	
+	next = (l_item *) (baseMem + (uint64_t)first->offsetNext);
+	next->pos = pos;
+	next->offsetNext = offsetFirst;
+	
+	//Add bytes used
 	ramUsage(2);
-	aux = (l_item *) (baseMem + (uint64_t)aux->offsetNext);
-	aux->pos = pos;
-	aux->offsetNext = 0;
 	
 }
 
@@ -587,17 +595,18 @@ void writeDictionary(Node_N * n, char * baseMem, FILE * f, basePtrTab * bpt){
 	
 	if(n->left != 0){
 		writeDictionary(getPointerFromOffset(bpt, n->left, n->llevel), baseMem, f, bpt);
-		fprintf(f, "%s:*", kmer);
-		traversePosLists(n, baseMem, f);
 	} 
+	
+	fprintf(f, "%s:*", kmer);
+	traversePosLists(n, baseMem, f);
+	
+	
+	
     if(n->right != 0){
-    	writeDictionary(getPointerFromOffset(bpt, n->right, n->rlevel), baseMem, f, bpt);	
-    	fprintf(f, "%s:*", kmer);
-		traversePosLists(n, baseMem, f);
+    	writeDictionary(getPointerFromOffset(bpt, n->right, n->rlevel), baseMem, f, bpt);
+    	//fprintf(f, "%s:*", kmer);
+		//traversePosLists(n, baseMem, f);
 	} 
-
-
-
 	
 
 	/*
