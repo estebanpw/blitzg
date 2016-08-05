@@ -105,10 +105,18 @@ int main(int argc, char ** av){
 	//Write dictionary
 	fprintf(stdout, "[INFO] Writing dictionary to file\n");
 	
+	char kmer[32];
+	showWord(root->b, kmer, 32);
+	printf("kmer: %s\n", kmer);
+	Node_N * pr = (Node_N * ) (bpt.table[0] + 22*100);
+	
+	showWord(pr->b, kmer, 32);
+	printf("kmer: %s\n", kmer);
+
 	//traverseTreeAndPositions(root, basePosMem, &bpt);
 	
 	//writeDictionary(root, basePosMem, dout, &bpt);
-	writeDictionary(root, basePosMem, stdout, &bpt);
+	writeDictionary(root, basePosMem, dout, &bpt);
 	
 	ramUsage(-1);
 	fclose(database);

@@ -2,7 +2,7 @@
 
 
 void terror(const char * err_msg);
-int wordcmp(const unsigned char *w1, const unsigned char *w2, int n);
+int wordcmp(const unsigned char *w1, const unsigned char *w2, int bytes_to_check);
 void shift_word_left(unsigned char * b);
 void shift_word_right(unsigned char * b);
 void addNucleotideToWord(unsigned char * b, char strand, unsigned char c);

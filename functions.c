@@ -42,6 +42,8 @@ Node_N * insertNode_N(const char * word, basePtrTab * bpt, char * basePosMem, ui
 	Node_N * aux;
 	*backOffset = getMemForNode(&aux, bpt); //Assign the offset to the member of the parent node
 	pmemcpy(aux->b, word, BYTES_IN_WORD);
+
+
 	aux->left = 0;
 	aux->right = 0;
 	//aux->type = 0;
@@ -167,7 +169,7 @@ int binarySearchNodes(const unsigned char * query, Node_N * root, Node_N ** foun
 		
 		queryComp = wordcmp(query, current->b, BYTES_IN_WORD);
 		
-		
+		/*
 		int i;
 		for(i=0;i<8;i++){
 			printf("%d - %d\n", query[i], current->b[i]);
@@ -180,19 +182,19 @@ int binarySearchNodes(const unsigned char * query, Node_N * root, Node_N ** foun
 		printf("          %s yields %d\n", kmer, queryComp);
 		//showNode_N(current);
 		//getchar();
-		
+		*/
 		if(queryComp == 0){ //Exact match
-			printf("exact\n");
+			//printf("exact\n");
 			*found = current;
 			return 0;
 		}else if(queryComp < 0){ //The word comes before, so go for left son
-			printf("left\n");
+			//printf("left\n");
 			*found = current;
 			if(current->left == 0) stop = 1;
 			current = getPointerFromOffset(bpt, current->left, current->llevel);
 		}else{ //The word comes after, so go for right son
 			*found = current;
-			printf("right\n");
+			//printf("right\n");
 			if(current->right == 0) stop = 1;
 			current = getPointerFromOffset(bpt, current->right, current->rlevel);
 			
@@ -321,11 +323,15 @@ uint32_t getMemForNode(Node_N ** nnode, basePtrTab * bpt){
 	}
 	
 	//Give memory to pointer
+	
+	//fprintf(stdout, "POS:::::::::::::%p\n", (bpt->table[bpt->lastP]+(uint64_t)currPosition));
+	//getchar();
 	*nnode = (Node_N *) (bpt->table[bpt->lastP]+(uint64_t)currPosition);
+	//printf("the real pos ::::::::::::%p\n", *nnode);
 	//Increment position for the next one
 	currPosition += sizeof(Node_N);
 	
-	return (currPosition - sizeof(Node_N));
+	return (currPosition - (uint32_t) sizeof(Node_N));
 }
 
 
@@ -340,6 +346,8 @@ uint32_t getMemForNode(Node_N ** nnode, basePtrTab * bpt){
 
 Node_N * getPointerFromOffset(basePtrTab * bpt, const uint32_t offset, const unsigned char level){
 	//add offset to pointer and return the chosen node
+	//fprintf(stdout, "POS:::::::::::::%p\n", (bpt->table[level]+(uint64_t)offset));
+	//getchar();
 	return (Node_N *) (bpt->table[level]+(uint64_t)offset);
 	
 }
@@ -571,19 +579,21 @@ void traverseTreeAndPositions(Node_N * n, char * baseMem, basePtrTab * bpt){
 */
 
 void writeDictionary(Node_N * n, char * baseMem, FILE * f, basePtrTab * bpt){
-	//printf("SHOWING\n");
-	showNode_N(n);
-	//getchar();
-	
-	//Node_S * castSCurr;
-	char kmer[32];
-	//showNode_N(castNCurr);
-	showWord(n->b, kmer, KSIZE);
-	fprintf(f, "--->%s:*", kmer);
-	getchar();
+
+	unsigned char word[8];
+	char kmer[32];	
+	pmemcpy(word, n->b, 8);
+	showWord(word, kmer, KSIZE);
+	fprintf(f, "%s:*", kmer);
 	traversePosLists(n, baseMem, f);
-	if(n->left != 0) writeDictionary(getPointerFromOffset(bpt, n->left, n->llevel), baseMem, f, bpt);	
-	if(n->right != 0) writeDictionary(getPointerFromOffset(bpt, n->right, n->rlevel), baseMem, f, bpt);
+	
+	if(n->left != 0) writeDictionary(getPointerFromOffset(bpt, n->left, n->llevel), baseMem, f, bpt);
+        if(n->right != 0) writeDictionary(getPointerFromOffset(bpt, n->right, n->rlevel), baseMem, f, bpt);
+
+
+
+	
+
 	/*
 	if(getTypeOfNode(n) == 0){ //Type Non-overlapping
 		castNCurr = (Node_N *) n;
