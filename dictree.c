@@ -38,7 +38,7 @@ int main(int argc, char ** av){
 	
 	//One-time heap allocation
 	
-	addHeapLevel(&bpt, UINT32_MAX/2, 1);
+	addHeapLevel(&bpt, UINT32_MAX, 1);
 	char * basePosMem = allocMemoryForPositions(totalSize); //heap for positions list
 	
 	
