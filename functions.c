@@ -422,6 +422,7 @@ char * allocMemoryForPositions(uint32_t totalMers){
 uint32_t getPositionOffset(){
 	static uint32_t consumed = 0;
 	consumed += (uint32_t) sizeof(l_item); //Each position consumes the size of an l_item
+	if(consumed >= UINT32_MAX) terror("Reached max number of positions to store");
 	return (consumed - (uint32_t)sizeof(l_item));
 }
 
