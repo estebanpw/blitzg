@@ -584,11 +584,17 @@ void writeDictionary(Node_N * n, char * baseMem, FILE * f, basePtrTab * bpt){
 	char kmer[32];	
 	pmemcpy(word, n->b, 8);
 	showWord(word, kmer, KSIZE);
-	fprintf(f, "%s:*", kmer);
-	traversePosLists(n, baseMem, f);
 	
-	if(n->left != 0) writeDictionary(getPointerFromOffset(bpt, n->left, n->llevel), baseMem, f, bpt);
-        if(n->right != 0) writeDictionary(getPointerFromOffset(bpt, n->right, n->rlevel), baseMem, f, bpt);
+	if(n->left != 0){
+		writeDictionary(getPointerFromOffset(bpt, n->left, n->llevel), baseMem, f, bpt);
+		fprintf(f, "%s:*", kmer);
+		traversePosLists(n, baseMem, f);
+	} 
+    if(n->right != 0){
+    	writeDictionary(getPointerFromOffset(bpt, n->right, n->rlevel), baseMem, f, bpt);	
+    	fprintf(f, "%s:*", kmer);
+		traversePosLists(n, baseMem, f);
+	} 
 
 
 
