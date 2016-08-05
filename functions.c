@@ -285,7 +285,7 @@ void ramUsage(int typeOfNode){
 	if(typeOfNode == 2) tbytes += sizeof(l_item);
 	//printing
 	if(typeOfNode == -1) {
-		printf("Current RAM usage: 	%d bytes - %d kilobytes - %d megabytes\n", tbytes, tbytes/1024, tbytes/(1024*1024));
+		printf("Current RAM usage: 	%"PRIu64" bytes - %"PRIu64" kilobytes - %"PRIu64" megabytes\n", tbytes, tbytes/1024, tbytes/(1024*1024));
 	}
 }
 
