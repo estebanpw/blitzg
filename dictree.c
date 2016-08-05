@@ -50,13 +50,13 @@ int main(int argc, char ** av){
 	//memset(M, 0, BYTES_IN_WORD);
 	
 	//Variables to account for positions
-	int firstTime, i, totalSeqs = 0, isOverlappingNode = 0, KPOS = 0;
+	int firstTime, i, totalSeqs = 0, KPOS = 0;
 	uint32_t pos = 0; //Up to 500*10^6 mers, should be enough
 	fprintf(stdout, "[INFO] Computing tree of mers\n");
 	while(!feof(database)){
 		//Skip until finding sequence identifier
 		while(!feof(database) && c != '>') c = fgetc(database);
-		firstTime = 0;
+		firstTime = pos = 0;
 		//Skip sequence identifier
 		while(!feof(database) && c != '\n') c = fgetc(database);
 		//Start of k-mer
@@ -76,23 +76,22 @@ int main(int argc, char ** av){
 			}else{
 				//We already had the first kmer
 				c = fgetc(database);
-				while(!feof(database) && !( c >= 'A' && c <= 'Z')) c = fgetc(database); //Read until next good character
+				while(!feof(database) && !( c >= 'A' && c <= 'Z') && c != '>') c = fgetc(database); //Read until next good character
 				pos++;
 				shift_word_left(b);
 				addNucleotideToWord(b, 'f', c);
 				
 			}
-			
-			
-			
-			
-			
-			if(totalSeqs == 0){ //If its the first sequence -> first node
-				root = createTree(b, &bpt, basePosMem);
-				totalSeqs++; // First node created
-			}else{
-				lookForWordAndInsert(b, root, &bpt, basePosMem, pos - KSIZE);
+			if(c != '>'){
+				if(totalSeqs == 0){ //If its the first sequence -> first node
+					root = createTree(b, &bpt, basePosMem);
+					totalSeqs++; // First node created
+				}else{
+					lookForWordAndInsert(b, root, &bpt, basePosMem, pos - KSIZE);
+				}	
 			}
+			
+			
 		}
 		fprintf(stdout, "[INFO] Sequence of length %"PRIu64" has %"PRIu64" mers of size k=%d\n", pos, pos-KSIZE, KSIZE);
 		
