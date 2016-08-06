@@ -19,7 +19,7 @@ Node_N * createTree(const char * word, basePtrTab * bpt, char * basePosMem){
 	if(root == NULL) terror("Could not allocate root node");
 	root->left = 0;
 	root->right = 0;
-	pmemcpy(root->b, word, BYTES_IN_WORD);
+	memcpy(root->b, word, BYTES_IN_WORD);
 	setFirstPosition(root, 0, basePosMem);
 	ramUsage(0);
 	
@@ -41,7 +41,7 @@ Node_N * insertNode_N(const char * word, basePtrTab * bpt, char * basePosMem, ui
 	//Node_N * aux = (Node_N *) askForMem(0, memPointer);
 	Node_N * aux;
 	*backOffset = getMemForNode(&aux, bpt); //Assign the offset to the member of the parent node
-	pmemcpy(aux->b, word, BYTES_IN_WORD);
+	memcpy(aux->b, word, BYTES_IN_WORD);
 
 
 	aux->left = 0;
@@ -226,7 +226,7 @@ inline unsigned int getTypeOfNode(void * node_x){
 */
 
 void addWordToN_Node(Node_N * node, const unsigned char * word){
-	pmemcpy(node->b, word, BYTES_IN_WORD);
+	memcpy(node->b, word, BYTES_IN_WORD);
 	if(node->b == NULL) terror("Error copying word to node");
 }
 
@@ -591,7 +591,7 @@ void writeDictionary(Node_N * n, char * baseMem, FILE * f, basePtrTab * bpt){
 
 	unsigned char word[8];
 	char kmer[32];	
-	pmemcpy(word, n->b, 8);
+	memcpy(word, n->b, 8);
 	showWord(word, kmer, KSIZE);
 	
 	if(n->left != 0){
