@@ -45,58 +45,83 @@ int main(int argc, char ** av){
 	//Variables to read kmers
 	char c = 'N'; //Char to read characters
 
-	unsigned char b[8];//, M[8];
+	unsigned char b[8], br[8];
 	memset(b, 0, BYTES_IN_WORD);
-	//memset(M, 0, BYTES_IN_WORD);
+	memset(br, 0, BYTES_IN_WORD);
 	
 	//Variables to account for positions
-	int firstTime, i, totalSeqs = 0, KPOS = 0;
-	uint32_t pos = 0; //Up to 500*10^6 mers, should be enough
-	fprintf(stdout, "[INFO] Computing tree of mers\n");
-	while(!feof(database)){
-		//Skip until finding sequence identifier
-		while(!feof(database) && c != '>') c = fgetc(database);
-		firstTime = pos = 0;
-		//Skip sequence identifier
-		while(!feof(database) && c != '\n') c = fgetc(database);
-		//Start of k-mer
-		while(!feof(database) && c != '>'){
-			if(firstTime == 0){ //First kmer of sequence
-				while(!feof(database) && firstTime < KSIZE){ //Reading the first lot of chars
-					c = fgetc(database);
-					//Copy characters to current and switch mer
-					if(c >= 'A' && c <= 'Z'){
-						//Compress word into 8 bytes
-						shift_word_left(b);
-						addNucleotideToWord(b, 'f', c);	
-						firstTime++;
-						pos++;
-					} 
-				}
-			}else{
-				//We already had the first kmer
-				c = fgetc(database);
-				while(!feof(database) && !( c >= 'A' && c <= 'Z') && c != '>') c = fgetc(database); //Read until next good character
-				pos++;
-				shift_word_left(b);
-				addNucleotideToWord(b, 'f', c);
-				
-			}
-			if(c != '>'){
-				if(totalSeqs == 0){ //If its the first sequence -> first node
-					root = createTree(b, &bpt, basePosMem);
-					totalSeqs++; // First node created
-				}else{
-					lookForWordAndInsert(b, root, &bpt, basePosMem, pos - KSIZE);
-				}	
-			}
-			
-			
-		}
-		fprintf(stdout, "[INFO] Sequence of length %"PRIu64" has %"PRIu64" mers of size k=%d\n", pos, pos-KSIZE, KSIZE);
-		
-	}
+	int strandF = 1, strandR = 0;
+	uint32_t pos = 0, totalSeqs = 0, crrSeqL = 0; //Up to 500*10^6 mers, should be enough
 	
+	//Print info
+	fprintf(stdout, "[INFO] Computing tree of mers\n");
+	
+	c = fgetc(database);
+	while(!feof(database)){
+        // Check if it's a special line
+        if (!isupper(toupper(c))) { // Comment, empty or quality (+) line
+            if (c == '>') { // Comment line
+                c = fgetc(database);
+                while (c != '\n') c = fgetc(database); //Avoid comment line
+
+                //temp.loc.seq++; // New sequence
+                crrSeqL = 0; // Reset buffered sequence length
+
+                pos++; // Absolute coordinates: add one for the "*"
+            }
+            c = fgetc(database); // First char of next sequence
+            continue;
+        }
+        
+        if (strandF) shift_word_left(b); // Shift bits sequence
+        if (strandR) shift_word_right(br); // Shift bits sequence
+
+        // Add new nucleotide
+        switch (c) {
+            case 'A': // A = 00
+                crrSeqL++;
+                if (strandR) br[0] |= 192;
+                break;
+            case 'C': // C = 01
+                if (strandF) b[BYTES_IN_WORD - 1] |= 1;
+                if (strandR) br[0] |= 128;
+                crrSeqL++;
+                break;
+            case 'G': // G = 10
+                if (strandF) b[BYTES_IN_WORD - 1] |= 2;
+                if (strandR) br[0] |= 64;
+                crrSeqL++;
+                break;
+            case 'T': // T = 11
+                if (strandF) b[BYTES_IN_WORD - 1] |= 3;
+                crrSeqL++;
+                break;
+            default : // Bad formed sequence
+                crrSeqL = 0;
+                break;
+        }
+        pos++;
+        if (crrSeqL >= (uint64_t) KSIZE) { // Full well formed sequence
+            if (strandF) {
+				if(totalSeqs == 0){ //If its the first sequence -> first node
+                        root = createTree(b, &bpt, basePosMem);
+                        totalSeqs++; // First node created
+                }else{
+                	lookForWordAndInsert(b, root, &bpt, basePosMem, pos - KSIZE);
+                }
+            }
+            /*
+            if (strandR) {
+                rev_temp.loc.pos = seqPos - 2; // Take position on read
+                rev_temp.loc.seq = temp.loc.seq;
+
+            }
+            */
+        }
+		c = fgetc(database);
+
+	}
+	fprintf(stdout, "[INFO] Sequence of length %"PRIu64" has %"PRIu64" mers of size k=%d\n", pos, pos-KSIZE, KSIZE);
 	
 	//traverseTreeAndPositions((void *) root, basePosMem);
 	
