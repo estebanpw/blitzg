@@ -64,10 +64,7 @@ unsigned char getLastChar(const unsigned char * b){
 */
 
 unsigned char getFirstChar(const unsigned char * b){
-	unsigned char r;
-	r = b[0] & 192;
-	r >>= 6;
-	return r;
+	return (r = b[0] & 192) >> 6;
 }
 
 
