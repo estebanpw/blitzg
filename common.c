@@ -59,6 +59,18 @@ unsigned char getLastChar(const unsigned char * b){
 }
 
 
+/*
+	Returns the first char of a compressed word
+*/
+
+unsigned char getFirstChar(const unsigned char * b){
+	unsigned char r;
+	r = b[0] & 192;
+	r >>= 6;
+	return r;
+}
+
+
 /*	Adds a 2-bit compressed char to a char array (word) previously shifted
 	@b:	The word where the nucleotide will be added
 	@strand:	'f' if we are calculating the forward kmers or 'r' if reverse

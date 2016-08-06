@@ -16,7 +16,7 @@ int main(int argc, char ** av){
 	FILE * database, * dout;
 	
 	//First node of the tree
-	Node_N * root;
+	Node_N * rootA, * rootC, * rootG, * rootT;
 	
 	//Open database
 	database = fopen64(av[1], "rt");
@@ -51,7 +51,8 @@ int main(int argc, char ** av){
 	
 	//Variables to account for positions
 	int strandF = 1, strandR = 0;
-	uint32_t pos = 0, totalSeqs = 0, crrSeqL = 0; //Up to 500*10^6 mers, should be enough
+	uint32_t pos = 0, crrSeqL = 0; //Up to 500*10^6 mers, should be enough
+	uint32_t totalSeqsA = 0, totalSeqsC = 0, totalSeqsG = 0, totalSeqsT = 0;
 	
 	//Print info
 	fprintf(stdout, "[INFO] Computing tree of mers\n");
@@ -103,20 +104,41 @@ int main(int argc, char ** av){
         pos++;
         if (crrSeqL >= (uint64_t) KSIZE) { // Full well formed sequence
             if (strandF) {
-				if(totalSeqs == 0){ //If its the first sequence -> first node
-                        root = createTree(b, &bpt, basePosMem);
-                        totalSeqs++; // First node created
-                }else{
-                	lookForWordAndInsert(b, root, &bpt, basePosMem, pos - KSIZE);
-                }
-            }
-            /*
-            if (strandR) {
-                rev_temp.loc.pos = seqPos - 2; // Take position on read
-                rev_temp.loc.seq = temp.loc.seq;
 
+            	if(getFirstChar(b) == 0){
+					if(totalSeqsA == 0){ //If its the first sequence -> first node
+	                        rootA = createTree(b, &bpt, basePosMem);
+	                        totalSeqsA++; // First node created
+	                }else{
+	                	lookForWordAndInsert(b, rootA, &bpt, basePosMem, pos - KSIZE - 1);
+	                }
+	            }else if(getFirstChar(b) ==  1){
+	            	if(totalSeqsC == 0){ //If its the first sequence -> first node
+	                        rootC = createTree(b, &bpt, basePosMem);
+	                        totalSeqsC++; // First node created
+	                }else{
+	                	lookForWordAndInsert(b, rootC, &bpt, basePosMem, pos - KSIZE - 1);
+	                }
+	            	
+				}else if(getFirstChar(b) ==  2){
+					if(totalSeqsG == 0){ //If its the first sequence -> first node
+	                        rootG = createTree(b, &bpt, basePosMem);
+	                        totalSeqsG++; // First node created
+	                }else{
+	                	lookForWordAndInsert(b, rootG, &bpt, basePosMem, pos - KSIZE - 1);
+	                }
+					
+				}else if(getFirstChar(b) == 3){
+					if(totalSeqsT == 0){ //If its the first sequence -> first node
+	                        rootT = createTree(b, &bpt, basePosMem);
+	                        totalSeqsT++; // First node created
+	                }else{
+	                	lookForWordAndInsert(b, rootT, &bpt, basePosMem, pos - KSIZE - 1);
+	                }
+					
+				}
             }
-            */
+            
         }
 		c = fgetc(database);
 
@@ -128,11 +150,10 @@ int main(int argc, char ** av){
 	//Write dictionary
 	fprintf(stdout, "[INFO] Writing dictionary to file\n");
 	
-
-	//traverseTreeAndPositions(root, basePosMem, &bpt);
-	
-	//writeDictionary(root, basePosMem, dout, &bpt);
-	writeDictionary(root, basePosMem, dout, &bpt);
+	writeDictionary(rootA, basePosMem, dout, &bpt);
+	writeDictionary(rootC, basePosMem, dout, &bpt);
+	writeDictionary(rootG, basePosMem, dout, &bpt);
+	writeDictionary(rootT, basePosMem, dout, &bpt);
 	
 	ramUsage(-1);
 	fclose(database);
@@ -140,63 +161,7 @@ int main(int argc, char ** av){
 	
 	freeNodesMem(&bpt);
 	free(basePosMem);
-	/*
-	unsigned char RESULT[32];
-	unsigned char kmer[32] = "CCCCCCCCTTTTTTTTCCCCCCCCGGGGGGGG";
 	
-	for(i=0;i<32;i++){
-		shift_word_left(b);
-		addNucleotideToWord(b, 'f', kmer[i]);
-	}
-	
-	printf("memPointer at start %p\n", memPointer);
-	root = createTree(b, &memPointer, basePosMem);
-	
-	printf("Root nltable: %"PRIu32"\n", root->n_ltable);
-	printf("Root position appearence is %"PRIu32"\n", getPosOfNode(root->n_ltable, basePosMem));
-	
-	
-	
-	
-	linkNewPos((void *) root, basePosMem, 1500);
-	linkNewPos((void *) root, basePosMem, 32000);
-	
-	//traversePosLists((void *)root, basePosMem);	
-	
-	
-	
-	shift_word_left(b);
-	addNucleotideToWord(b, 'f', 'C');
-	
-	Node_N * prueba = insertNode_N(b, &memPointer, basePosMem, 32);
-	printf("Prueba position appearence is %"PRIu32"\n", getPosOfNode(prueba->n_ltable, basePosMem));
-	
-	linkNewPos((void *) prueba, basePosMem, 1234);
-	
-	
-	Node_N * otro = insertNode_N(b, &memPointer, basePosMem, 99);
-	
-	
-	linkNewPos((void *) prueba, basePosMem, 666666);
-	
-	traversePosLists((void *)root, basePosMem);	
-	traversePosLists((void *)prueba, basePosMem);	
-	traversePosLists((void *)otro, basePosMem);
-	//traversePosLists((void *)root, basePosMem);	
-	
-	*/
-	
-	/*
-	shift_word_left(b);
-	addNucleotideToWord(b, 'f', 'A');
-	
-	Node_N * prueba2 = insertNode_N(b, &memPointer);
-	printf("aftersecond extra memPointer at start %p\n", memPointer);
-	
-	showNode_N(root);
-	showNode_N(prueba);
-	showNode_N(prueba2);
-	*/
 	
 	
 	
