@@ -10,13 +10,13 @@ void terror(const char * err_msg){
 /* 	This function compares two arrays of unsigned chars with the same length.
  *  @param w1: first array to be compared.
  *  @param w2: second array to be compared.
- *  @param n: length of BOTH arrays (MUST BE multiple of 4).
+ *  @param bytes_to_check: length of BOTH arrays in bytes
  *  @retun a positive number if w1>w2, a negative number if w1<w2 and zero if they are equal.
  */
  
-int wordcmp(const unsigned char *w1, const unsigned char *w2, int n) {
-	int i = 0;
-	for (i=0;i<n/4;i++) {
+int wordcmp(const unsigned char *w1, const unsigned char *w2, int bytes_to_check) {
+	int i;
+	for (i=0;i<bytes_to_check;i++) {
 		if (w1[i]<w2[i]) return -1;
 		if (w1[i]>w2[i]) return +1;
 	}
@@ -59,6 +59,15 @@ unsigned char getLastChar(const unsigned char * b){
 }
 
 
+/*
+	Returns the first char of a compressed word
+*/
+
+unsigned char getFirstChar(const unsigned char * b){
+	return (r = b[0] & 192) >> 6;
+}
+
+
 /*	Adds a 2-bit compressed char to a char array (word) previously shifted
 	@b:	The word where the nucleotide will be added
 	@strand:	'f' if we are calculating the forward kmers or 'r' if reverse
@@ -92,7 +101,7 @@ void addNucleotideToWord(unsigned char * b, char strand, unsigned char c){
  *  @WORD_LENGTH: Length in bits of the word to translate
  */
 
-void showWord(const char * b, char * kmer, uint16_t WORD_LENGTH) {
+void showWord(const unsigned char * b, char * kmer, uint16_t WORD_LENGTH) {
 	char Alf[] = { 'A', 'C', 'G', 'T' };
 	int i;
 	int wsize = WORD_LENGTH/4;
@@ -129,4 +138,18 @@ char bitsToChar(unsigned char b){
 	if((b & 3) == 2) return 'G';
 	if((b & 3) == 1) return 'C';
 	if((b & 3) == 0) return 'A';
+}
+
+/*
+	I have experienced some strange memcpy behaviour
+	@destination:	pointer to an unsigned char * where the bytes will be copied
+	@source:	pointer to an unsigned char * from where to copy the bytes
+	@bytes:	bytes to copy from to source
+*/
+
+void pmemcpy(unsigned char * d, const unsigned char * s, int bytes){
+	int i;
+	for(i=0;i<bytes;i++){
+		d[i] = s[i];
+	}
 }
