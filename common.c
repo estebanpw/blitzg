@@ -2,9 +2,62 @@
 #include <stdlib.h>
 #include "structs.h"
 
+/*
+	Prints an error to the stderr file handler and exists the program
+	@err_msg the error itself
+*/
+
 void terror(const char * err_msg){
 	fprintf(stderr, "\nERR: %s\n", err_msg);
 	exit(-1);
+}
+
+/*
+	Translates from ACGT to 0,1,2,3 
+	@c the character to translate
+	
+	Returns the numerical value
+*/
+
+inline void translate(const char c){
+	switch(c){
+		case 'A': return 0;
+		case 'C': return 1;
+		case 'G': return 2;
+		case 'T': return 3;
+	}
+}
+
+/*
+	Converts a string of nucleotides to its hash value
+	@word:	The word composed of nucleotides of length KSIZE
+	@KSIZE:	The length of the word
+	
+	Returns the hash value of the word
+*/
+
+uint64_t hashOfWord(const char * word, uint32_t KSIZE){
+	uint64_t value = 0, jIdx;
+	for(jIdx=0;jIdx<KSIZE;jIdx++){
+		value += translate(word[jIdx]) * (uint64_t) pow(4, KSIZE-(jIdx+1));
+	}
+	return value;
+}
+
+/*
+	Returns the word for a given hash value
+	@word:	The word that will contain the string of nucleotides obtained from the hash
+	@KSIZE:	The length of the word
+	@hash:	The computed hash of the word
+*/
+void hashToWord(char * word, uint32_t KSIZE, uint64_t hash){
+	uint64_t i = 0,j;
+	char alph[4] = "ACGT";
+	
+	for(j=(uint64_t)KSIZE; j > 1; j--){
+		word[i++] = alph[ (hash/(uint64_t)(pow(2, j))) % KSIZE];
+	}
+	word[i] = alph[hash/KSIZE];
 }
 
 /* 	This function compares two arrays of unsigned chars with the same length.

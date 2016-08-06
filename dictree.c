@@ -45,13 +45,14 @@ int main(int argc, char ** av){
 	//Variables to read kmers
 	char c = 'N'; //Char to read characters
 
-	unsigned char b[8], br[8];
-	memset(b, 0, BYTES_IN_WORD);
-	memset(br, 0, BYTES_IN_WORD);
+	//Variables to hold the kmers
+	char b[KSIZE], br[KSIZE];
+	
+	int strandF = 1, strandR = 0;
 	
 	//Variables to account for positions
-	int strandF = 1, strandR = 0;
-	uint32_t pos = 0, crrSeqL = 0; //Up to 500*10^6 mers, should be enough
+	
+	uint32_t pos = 0, crrSeqL = 0, idxSeqL = 0; //Up to 500*10^6 mers, should be enough
 	uint32_t totalSeqsA = 0, totalSeqsC = 0, totalSeqsG = 0, totalSeqsT = 0;
 	
 	//Print info
@@ -67,17 +68,21 @@ int main(int argc, char ** av){
 
                 //temp.loc.seq++; // New sequence
                 crrSeqL = 0; // Reset buffered sequence length
-
+				idxSeqL = 0; // Reset counter up to KSIZE
                 pos++; // Absolute coordinates: add one for the "*"
             }
             c = fgetc(database); // First char of next sequence
             continue;
         }
         
-        if (strandF) shift_word_left(b); // Shift bits sequence
-        if (strandR) shift_word_right(br); // Shift bits sequence
+        //Used in bits words
+        //if (strandF) shift_word_left(b); // Shift bits sequence
+        //if (strandR) shift_word_right(br); // Shift bits sequence
 
         // Add new nucleotide
+        if(c == 'A' || c == 'C' || c == 'G' || c == 'T') b[idxSeqL++] = c; else crrSeqL = 0;
+        
+        /*
         switch (c) {
             case 'A': // A = 00
                 crrSeqL++;
@@ -101,18 +106,19 @@ int main(int argc, char ** av){
                 crrSeqL = 0;
                 break;
         }
+        */
         pos++;
         if (crrSeqL >= (uint64_t) KSIZE) { // Full well formed sequence
             if (strandF) {
 
-            	if(getFirstChar(b) == 0){
+            	if(b[0] == 'A'){
 					if(totalSeqsA == 0){ //If its the first sequence -> first node
 	                        rootA = createTree(b, &bpt, basePosMem);
 	                        totalSeqsA++; // First node created
 	                }else{
 	                	lookForWordAndInsert(b, rootA, &bpt, basePosMem, pos - KSIZE - 1);
 	                }
-	            }else if(getFirstChar(b) ==  1){
+	            }else if(b[0] == 'C'){
 	            	if(totalSeqsC == 0){ //If its the first sequence -> first node
 	                        rootC = createTree(b, &bpt, basePosMem);
 	                        totalSeqsC++; // First node created
@@ -120,7 +126,7 @@ int main(int argc, char ** av){
 	                	lookForWordAndInsert(b, rootC, &bpt, basePosMem, pos - KSIZE - 1);
 	                }
 	            	
-				}else if(getFirstChar(b) ==  2){
+				}else if(b[0] == 'G'){
 					if(totalSeqsG == 0){ //If its the first sequence -> first node
 	                        rootG = createTree(b, &bpt, basePosMem);
 	                        totalSeqsG++; // First node created
@@ -128,7 +134,7 @@ int main(int argc, char ** av){
 	                	lookForWordAndInsert(b, rootG, &bpt, basePosMem, pos - KSIZE - 1);
 	                }
 					
-				}else if(getFirstChar(b) == 3){
+				}else if(b[0] == 'T'){
 					if(totalSeqsT == 0){ //If its the first sequence -> first node
 	                        rootT = createTree(b, &bpt, basePosMem);
 	                        totalSeqsT++; // First node created
@@ -138,7 +144,10 @@ int main(int argc, char ** av){
 					
 				}
             }
-            
+        //Copy from second character to KSIZE to the 
+        memcpy(b, &b[1], KSIZE-1);
+        //Restart the index to the last character
+        idxSeqL = KSIZE-1; 
         }
 		c = fgetc(database);
 
