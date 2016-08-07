@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include "structs.h"
 
 /*
@@ -19,7 +20,7 @@ void terror(const char * err_msg){
 	Returns the numerical value
 */
 
-inline void translate(const char c){
+inline uint16_t translate(const char c){
 	switch(c){
 		case 'A': return 0;
 		case 'C': return 1;
@@ -36,10 +37,10 @@ inline void translate(const char c){
 	Returns the hash value of the word
 */
 
-uint64_t hashOfWord(const char * word, uint32_t KSIZE){
+uint64_t hashOfWord(const char * word, uint32_t k){
 	uint64_t value = 0, jIdx;
-	for(jIdx=0;jIdx<KSIZE;jIdx++){
-		value += translate(word[jIdx]) * (uint64_t) pow(4, KSIZE-(jIdx+1));
+	for(jIdx=0;jIdx<k;jIdx++){
+		value += (translate(word[jIdx]) * (uint64_t) pow(4, k-(jIdx+1)));
 	}
 	return value;
 }
@@ -50,14 +51,29 @@ uint64_t hashOfWord(const char * word, uint32_t KSIZE){
 	@KSIZE:	The length of the word
 	@hash:	The computed hash of the word
 */
-void hashToWord(char * word, uint32_t KSIZE, uint64_t hash){
-	uint64_t i = 0,j;
+void hashToWord(char * word, uint32_t k, uint64_t hash){
+	uint64_t i = 0, j;
 	char alph[4] = "ACGT";
 	
-	for(j=(uint64_t)KSIZE; j > 1; j--){
-		word[i++] = alph[ (hash/(uint64_t)(pow(2, j))) % KSIZE];
+	for(j=k-1; j > 0; j--){
+		word[i] = alph[ ((uint64_t) hash/(uint64_t)(pow(4, j))) % 4];
+		i++;
 	}
-	word[i] = alph[hash/KSIZE];
+	word[k-1] = alph[hash%4];
+}
+
+/*
+	Compares two hashes of words
+	@h1:	The hash of the first word to compare
+	@h2:	The hash of the second word to compare
+	
+	Returns -1,0,1 depending whether the h1<h2, h1 == h2 or h1>h2
+*/
+
+inline int hashcmp(uint64_t h1, uint64_t h2){
+	if(h1 == h2) return 0;
+	if(h1 < h2) return -1;
+	if(h1 > h2) return 1;
 }
 
 /* 	This function compares two arrays of unsigned chars with the same length.
@@ -117,7 +133,7 @@ unsigned char getLastChar(const unsigned char * b){
 */
 
 unsigned char getFirstChar(const unsigned char * b){
-	return (r = b[0] & 192) >> 6;
+	return (b[0] & 192) >> 6;
 }
 
 

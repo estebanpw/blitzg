@@ -80,7 +80,13 @@ int main(int argc, char ** av){
         //if (strandR) shift_word_right(br); // Shift bits sequence
 
         // Add new nucleotide
-        if(c == 'A' || c == 'C' || c == 'G' || c == 'T') b[idxSeqL++] = c; else crrSeqL = 0;
+        if(c == 'A' || c == 'C' || c == 'G' || c == 'T'){
+        	b[idxSeqL++] = c;
+			crrSeqL++;	
+		}else{
+			crrSeqL = 0;
+			idxSeqL = 0;	
+		}
         
         /*
         switch (c) {
@@ -109,8 +115,8 @@ int main(int argc, char ** av){
         */
         pos++;
         if (crrSeqL >= (uint64_t) KSIZE) { // Full well formed sequence
+        	
             if (strandF) {
-
             	if(b[0] == 'A'){
 					if(totalSeqsA == 0){ //If its the first sequence -> first node
 	                        rootA = createTree(b, &bpt, basePosMem);

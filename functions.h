@@ -14,15 +14,12 @@
  _a < _b ? _a : _b; })
 
 Node_N * createTree(const char * word, basePtrTab * bpt, char * basePosMem);
-Node_N * insertNode_N(const char * word, basePtrTab * bpt, char * basePosMem, uint32_t pos, uint32_t * backOffset);
+Node_N * insertNode_N(uint64_t hash, basePtrTab * bpt, char * basePosMem, uint32_t pos, uint32_t * backOffset);
 Node_S * insertNode_S(const char letter, char ** memPointer, char * basePosMem, uint32_t pos);
 int lookForWordAndInsert(const char * word, Node_N * root, basePtrTab * bpt, char * basePosMem, uint32_t pos);
-int binarySearchNodes(const unsigned char * query, Node_N * root, Node_N ** found, basePtrTab * bpt);
+int binarySearchNodes(uint64_t query, Node_N * root, Node_N ** found, basePtrTab * bpt);
 unsigned int getTypeOfNode(void * node_x);
-void addWordToN_Node(Node_N * node, const unsigned char * word);
-void addWordToS_Node(Node_S * node, const unsigned char b);
 void showNode_N(const Node_N * node);
-void showNode_S(const Node_S * node);
 void preOrderTraverse(Node_N * n, basePtrTab * bpt);
 void ramUsage(int typeOfNode);
 void addHeapLevel(basePtrTab * bpt, uint64_t bytes_wished, int firstMalloc);

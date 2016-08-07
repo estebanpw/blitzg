@@ -19,7 +19,7 @@ Node_N * createTree(const char * word, basePtrTab * bpt, char * basePosMem){
 	if(root == NULL) terror("Could not allocate root node");
 	root->left = 0;
 	root->right = 0;
-	memcpy(root->b, word, BYTES_IN_WORD);
+	root->hashmer = hashOfWord(word, KSIZE);
 	setFirstPosition(root, 0, basePosMem);
 	ramUsage(0);
 	
@@ -36,12 +36,12 @@ Node_N * createTree(const char * word, basePtrTab * bpt, char * basePosMem){
 	Returns	a pointer to newly allocated node
 */
 
-Node_N * insertNode_N(const char * word, basePtrTab * bpt, char * basePosMem, uint32_t pos, uint32_t * backOffset){
+Node_N * insertNode_N(uint64_t hash, basePtrTab * bpt, char * basePosMem, uint32_t pos, uint32_t * backOffset){
 	//Node_N * aux = (Node_N *) malloc(sizeof(Node_N));
 	//Node_N * aux = (Node_N *) askForMem(0, memPointer);
 	Node_N * aux;
 	*backOffset = getMemForNode(&aux, bpt); //Assign the offset to the member of the parent node
-	memcpy(aux->b, word, BYTES_IN_WORD);
+	aux->hashmer = hash;
 
 
 	aux->left = 0;
@@ -98,8 +98,8 @@ int lookForWordAndInsert(const char * word, Node_N * root, basePtrTab * bpt, cha
 	//printf("==============\n");
 	//traverseTreeAndPositions((void *)root, basePosMem);
 	//printf("==============\n");
-	
-	int searchRes = binarySearchNodes(word, root, &parent, bpt);
+	uint64_t currHash = hashOfWord(word, KSIZE);
+	int searchRes = binarySearchNodes(currHash, root, &parent, bpt);
 	
 	//newType = getTypeOfNode(parent);
 	
@@ -112,7 +112,7 @@ int lookForWordAndInsert(const char * word, Node_N * root, basePtrTab * bpt, cha
 		return 0;
 	}else if(searchRes < 0){ //Node has to be inserted as left son of newNode
 		
-		insertNode_N(word, bpt, basePosMem, pos, &parent->left);
+		insertNode_N(currHash, bpt, basePosMem, pos, &parent->left);
 		parent->llevel = bpt->lastP;
 		/*
 		//printf("Inserted left\n");
@@ -130,7 +130,7 @@ int lookForWordAndInsert(const char * word, Node_N * root, basePtrTab * bpt, cha
 	}else if(searchRes > 0){ //Node has to be inserted as right son of newNode
 		//printf("Inserted to the right\n");
 		
-		 insertNode_N(word, bpt, basePosMem, pos, &parent->right); //Assign offset of right child to parent
+		 insertNode_N(currHash, bpt, basePosMem, pos, &parent->right); //Assign offset of right child to parent
 		 parent->rlevel = bpt->lastP;  //store to which level does the offset correspond to
 		/*
 		if(isOverlapping == 1){
@@ -157,17 +157,18 @@ int lookForWordAndInsert(const char * word, Node_N * root, basePtrTab * bpt, cha
 				1	if the match does not exist and therefore has to be added (use node "found"). 1 indicates it should be added to right son
 */
 
-int binarySearchNodes(const unsigned char * query, Node_N * root, Node_N ** found, basePtrTab * bpt){
+int binarySearchNodes(uint64_t query, Node_N * root, Node_N ** found, basePtrTab * bpt){
 	Node_N * current = root;
 	*found = NULL;
-	int stop = 0;
-		
+	int stop = 0;	
 	int queryComp;
+	
 	do{
 					
 		//Comparison
 		
-		queryComp = wordcmp(query, current->b, BYTES_IN_WORD);
+		//queryComp = wordcmp(query, current->b, BYTES_IN_WORD);
+		queryComp = hashcmp(query, current->hashmer);
 		
 		/*
 		int i;
@@ -219,26 +220,8 @@ inline unsigned int getTypeOfNode(void * node_x){
 }
 
 
-/*
-	Adds a word properly shifted to a non overlapping node
-	@node:	The non overlapping node to copy the word to
-	@word	The compressed word
-*/
 
-void addWordToN_Node(Node_N * node, const unsigned char * word){
-	memcpy(node->b, word, BYTES_IN_WORD);
-	if(node->b == NULL) terror("Error copying word to node");
-}
 
-/*
-	Adds a 2-bits character to an overlapping word
-	@node:	The overlapping node to copy the word to
-	@word	The compressed character
-*/
-
-void addWordToS_Node(Node_S * node, const unsigned char b){
-	node->b = b;
-}
 
 /*
 	Prints a non overlapping node
@@ -246,17 +229,8 @@ void addWordToS_Node(Node_S * node, const unsigned char b){
 
 void showNode_N(const Node_N * node){
 	char kmer[32];
-	showWord(node->b, kmer, BYTES_IN_WORD*4);
+	hashToWord(kmer, KSIZE, node->hashmer);
 	fprintf(stdout, "NODE_N:->:%p\n	Word::%s\n	Look-up::%"PRIu32"\nL-lvl: %"PRIu32"\nL-off: %"PRIu32"\nR-lvl: %"PRIu32"\nR-off: %"PRIu32"\n", node, kmer, node->n_ltable, node->llevel, node->left, node->rlevel, node->right);
-	//getchar();
-}
-
-/*
-	Prints an overlapped node
-*/
-
-void showNode_S(const Node_S * node){
-	fprintf(stdout, "NODE_S:->:%p\n	Word::%c\n	Look-up::%"PRIu32"\n", node, bitsToChar(node->b), node->n_ltable);
 	//getchar();
 }
 
@@ -589,10 +563,9 @@ void traverseTreeAndPositions(Node_N * n, char * baseMem, basePtrTab * bpt){
 
 void writeDictionary(Node_N * n, char * baseMem, FILE * f, basePtrTab * bpt){
 
-	unsigned char word[8];
 	char kmer[32];	
-	memcpy(word, n->b, 8);
-	showWord(word, kmer, KSIZE);
+	
+	hashToWord(kmer, KSIZE, n->hashmer);
 	
 	if(n->left != 0){
 		writeDictionary(getPointerFromOffset(bpt, n->left, n->llevel), baseMem, f, bpt);

@@ -2,9 +2,10 @@
 
 
 void terror(const char * err_msg);
-inline void translate(const char c);
-uint64_t hashOfWord(const char * word, uint32_t KSIZE);
-void hashToWord(char * word, uint32_t KSIZE, uint64_t hash);
+inline uint16_t translate(const char c);
+uint64_t hashOfWord(const char * word, uint32_t k);
+void hashToWord(char * word, uint32_t k, uint64_t hash);
+inline int hashcmp(uint64_t h1, uint64_t h2);
 int wordcmp(const unsigned char *w1, const unsigned char *w2, int bytes_to_check);
 void shift_word_left(unsigned char * b);
 void shift_word_right(unsigned char * b);
