@@ -60,6 +60,7 @@ void hashToWord(char * word, uint32_t k, uint64_t hash){
 		i++;
 	}
 	word[k-1] = alph[hash%4];
+	word[k] = '\0';
 }
 
 /*

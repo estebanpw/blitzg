@@ -46,7 +46,7 @@ int main(int argc, char ** av){
 	char c = 'N'; //Char to read characters
 
 	//Variables to hold the kmers
-	char b[KSIZE], br[KSIZE];
+	char b[KSIZE+1], br[KSIZE+1];
 	
 	int strandF = 1, strandR = 0;
 	

@@ -563,7 +563,7 @@ void traverseTreeAndPositions(Node_N * n, char * baseMem, basePtrTab * bpt){
 
 void writeDictionary(Node_N * n, char * baseMem, FILE * f, basePtrTab * bpt){
 
-	char kmer[32];	
+	char kmer[33];	
 	
 	hashToWord(kmer, KSIZE, n->hashmer);
 	
