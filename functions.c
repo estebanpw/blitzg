@@ -191,13 +191,20 @@ int binarySearchNodes(uint64_t query, Node_N * root, Node_N ** found, basePtrTab
 		}else if(queryComp < 0){ //The word comes before, so go for left son
 			//printf("left\n");
 			*found = current;
-			if(current->left == 0) stop = 1;
-			current = getPointerFromOffset(bpt, current->left, current->llevel);
+			if(current->left == 0){
+				stop = 1;	
+			}else{
+				current = getPointerFromOffset(bpt, current->left, current->llevel);
+			}
 		}else{ //The word comes after, so go for right son
 			*found = current;
 			//printf("right\n");
-			if(current->right == 0) stop = 1;
-			current = getPointerFromOffset(bpt, current->right, current->rlevel);
+			if(current->right == 0){
+				stop = 1;	
+			}else{
+				current = getPointerFromOffset(bpt, current->right, current->rlevel);	
+			}
+			
 			
 		}
 			

@@ -29,6 +29,15 @@ inline uint16_t translate(const char c){
 	}
 }
 
+uint64_t quick_pow4(uint64_t n){
+	static uint64_t pow4[33]={1, 4, 16, 64, 256, 1024, 4096, 16384, 65536, 
+	262144, 1048576, 4194304, 16777216, 67108864, 268435456, 1073741824, 4294967296, 
+	17179869184, 68719476736, 274877906944, 1099511627776, 4398046511104, 17592186044416, 
+	70368744177664, 281474976710656, 1125899906842624, 4503599627370496, 18014398509481984, 
+	72057594037927936, 288230376151711744, 1152921504606846976, 4611686018427387904};
+	return pow4[n];
+}
+
 /*
 	Converts a string of nucleotides to its hash value
 	@word:	The word composed of nucleotides of length KSIZE
@@ -40,7 +49,8 @@ inline uint16_t translate(const char c){
 uint64_t hashOfWord(const char * word, uint32_t k){
 	uint64_t value = 0, jIdx;
 	for(jIdx=0;jIdx<k;jIdx++){
-		value += (translate(word[jIdx]) * (uint64_t) pow(4, k-(jIdx+1)));
+		//value += (translate(word[jIdx]) * (uint64_t) pow(4, k-(jIdx+1)));
+		value += (translate(word[jIdx]) * (uint64_t) quick_pow4(k-(jIdx+1)));
 	}
 	return value;
 }
@@ -56,7 +66,8 @@ void hashToWord(char * word, uint32_t k, uint64_t hash){
 	char alph[4] = "ACGT";
 	
 	for(j=k-1; j > 0; j--){
-		word[i] = alph[ ((uint64_t) hash/(uint64_t)(pow(4, j))) % 4];
+		//word[i] = alph[ ((uint64_t) hash/(uint64_t)(pow(4, j))) % 4];
+		word[i] = alph[ ((uint64_t) hash/(uint64_t)(quick_pow4(j))) % 4];
 		i++;
 	}
 	word[k-1] = alph[hash%4];

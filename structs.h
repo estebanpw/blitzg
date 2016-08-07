@@ -7,6 +7,12 @@
 #define MAX_HEAPS 256
 #pragma pack(push, 1)
 
+/*
+ NEW IMPROVEMENT:
+ 
+ use a lookup table for the powers of 4 in the hash calculation!!
+
+*/
 
 // not in use anymore
 typedef struct node_o{
