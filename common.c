@@ -16,7 +16,7 @@ void terror(const char * err_msg){
  */
  
 int wordcmp(const unsigned char *w1, const unsigned char *w2, int bytes_to_check) {
-	
+	/*
 	__m128i vw1 = _mm_loadl_epi64((__m128i *)w1);
 	__m128i vw2 = _mm_loadl_epi64((__m128i *)w2);
 	__m128i allOnes;
@@ -29,6 +29,14 @@ int wordcmp(const unsigned char *w1, const unsigned char *w2, int bytes_to_check
 	if((uint64_t *)&resMayor < (uint64_t *)&resMenor) return -1;
 	if((uint64_t *)&resMayor > (uint64_t *)&resMenor) return 1;
 	return 0;
+	
+	*/
+	
+	
+	if(*(uint64_t *)&w1[0] < *(uint64_t *)&w2[0]) return -1;
+	if(*(uint64_t *)&w1[0] > *(uint64_t *)&w2[0]) return 1;
+	return 0;
+	
 	/*
 	int i;
 	for (i=0;i<bytes_to_check;i++) {

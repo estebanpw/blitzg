@@ -100,7 +100,6 @@ int lookForWordAndInsert(const char * word, Node_N * root, basePtrTab * bpt, cha
 	//printf("==============\n");
 	
 	int searchRes = binarySearchNodes(word, root, &parent, bpt);
-	
 	//newType = getTypeOfNode(parent);
 	
 	if(searchRes == 0){
@@ -184,17 +183,18 @@ int binarySearchNodes(const unsigned char * query, Node_N * root, Node_N ** foun
 		//getchar();
 		*/
 		if(queryComp == 0){ //Exact match
-			//printf("exact\n");
+			
+			
 			*found = current;
 			return 0;
 		}else if(queryComp < 0){ //The word comes before, so go for left son
-			//printf("left\n");
+			
 			*found = current;
 			if(current->left == 0) stop = 1;
 			current = getPointerFromOffset(bpt, current->left, current->llevel);
 		}else{ //The word comes after, so go for right son
 			*found = current;
-			//printf("right\n");
+			
 			if(current->right == 0) stop = 1;
 			current = getPointerFromOffset(bpt, current->right, current->rlevel);
 			
