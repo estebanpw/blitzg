@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <emmintrin.h>
 #include "structs.h"
 
 void terror(const char * err_msg){
@@ -15,12 +16,27 @@ void terror(const char * err_msg){
  */
  
 int wordcmp(const unsigned char *w1, const unsigned char *w2, int bytes_to_check) {
+	
+	__m128i vw1 = _mm_loadl_epi64((__m128i *)w1);
+	__m128i vw2 = _mm_loadl_epi64((__m128i *)w2);
+	__m128i allOnes;
+	uint64_t ones[2] = {0xFFFFFFFF, 0xFFFFFFFF};
+	_mm_store_si128(&allOnes, *(__m128i*)&ones[0]);
+	
+	__m128i resMayor = _mm_and_si128 (vw1, allOnes);
+	__m128i resMenor = _mm_and_si128 (vw2, allOnes);
+	
+	if((uint64_t *)&resMayor < (uint64_t *)&resMenor) return -1;
+	if((uint64_t *)&resMayor > (uint64_t *)&resMenor) return 1;
+	return 0;
+	/*
 	int i;
 	for (i=0;i<bytes_to_check;i++) {
 		if (w1[i]<w2[i]) return -1;
 		if (w1[i]>w2[i]) return +1;
 	}
 	return 0;
+	*/
 }
 
 /* 	This function is used to shift left bits in a unsigned char array
@@ -28,12 +44,66 @@ int wordcmp(const unsigned char *w1, const unsigned char *w2, int bytes_to_check
  */
  
 void shift_word_left(unsigned char * b) {
+	
+	/*
+	__m128i copy;
+	__m128i res;
+	__m128i aux; //used to hold the overflown bits
+	unsigned char aux_char[32] = {192,192,192,192, 192,192,192,192, 0,0,0,0, 0,0,0,0}; //remember to kill last one
+	
+	unsigned char * ptr = (unsigned char *)&res;
+	int k;
+		
+	//Set copy to the current b
+	_mm_store_si128(&copy, *(__m128i *)&b[0]);
+	_mm_store_si128(&aux, *(__m128i *)&aux_char[0]);
+	
+	//Copy overflown bits
+	__m128i tmp = _mm_and_si128(copy, aux);
+	
+	
+	//Shift the overflown elements 6 bits to the right so that they match bit-positions
+	tmp = _mm_srli_epi64(tmp, 6);
+	//Load only the first 8 bytes of the 16 bytes register, but shifting one byte so that we match byte-positions
+	ptr = (unsigned char *)&tmp;
+	ptr+=1; //Skip byte
+	tmp = _mm_loadl_epi64((__m128i *)ptr);
+	
+	printf("Overflown\n");
+	ptr =(unsigned char *) &tmp;
+	for(k=0;k<8;k++){
+		printf("Shift %d: --> (%d)\n", k, *ptr);
+		ptr += 1;
+		getchar();
+	}
+	
+			
+	//Shift 2 bits to the left
+	res = _mm_slli_epi64(copy, 2);
+	res = _mm_or_si128(res, tmp); //OR the overflown elements
+	
+	
+	ptr = (unsigned char *)&res; //Put last 2 bits to zero
+	ptr[BYTES_IN_WORD-1] = ptr[BYTES_IN_WORD-1] & 252;
+	*/
     unsigned int i;
     for (i = 0; i < BYTES_IN_WORD - 1; i++) {
         b[i] <<= 2;
         b[i] |= (b[i + 1] >> 6);
     }
     b[BYTES_IN_WORD - 1] <<= 2;
+    
+    /*
+	//printf("Printing the shifting from the __m128 should go %s\n\n", km);
+	printf("Result should be\n");
+	ptr = (unsigned char *) &res;
+	
+	for(k=0;k<8;k++){
+		printf("Shift %d: --> (%d, %d)\n", k, *ptr, b[k]);
+		ptr += 1;
+		getchar();
+	}
+	*/
 }
 
 
@@ -64,7 +134,7 @@ unsigned char getLastChar(const unsigned char * b){
 */
 
 unsigned char getFirstChar(const unsigned char * b){
-	return (r = b[0] & 192) >> 6;
+	return (b[0] & 192) >> 6;
 }
 
 
