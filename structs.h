@@ -4,6 +4,7 @@
 
 #define BYTES_IN_WORD 8
 #define KSIZE 32
+#define READBUF 100000
 #define MAX_HEAPS 256
 #pragma pack(push, 1)
 

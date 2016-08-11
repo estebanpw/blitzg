@@ -56,13 +56,19 @@ int main(int argc, char ** av){
 	
 	//Print info
 	fprintf(stdout, "[INFO] Computing tree of mers\n");
+
+	//Variables to read from buffer
+	uint64_t posBuffer = READBUF + 1, tReadBuffer = 0;
+	char *readBuffer = (char *) malloc(READBUF * sizeof(char));
+	if (readBuffer == NULL) terror("Could not allocate memory for reading buffer");
+
+	c = buffered_fgetc(readBuffer, &posBuffer, &tReadBuffer, database);
 	
-	c = fgetc(database);
-	while(!feof(database)){
-        // Check if it's a special line
+        while (!feof(database) || (feof(database) && posBuffer < tReadBuffer)){
+	// Check if it's a special line
         if (!isupper(toupper(c))) { // Comment, empty or quality (+) line
             if (c == '>') { // Comment line
-                c = fgetc(database);
+		c = buffered_fgetc(readBuffer, &posBuffer, &tReadBuffer, database);
                 while (c != '\n') c = fgetc(database); //Avoid comment line
 
                 //temp.loc.seq++; // New sequence
@@ -70,7 +76,7 @@ int main(int argc, char ** av){
 
                 pos++; // Absolute coordinates: add one for the "*"
             }
-            c = fgetc(database); // First char of next sequence
+	    c = buffered_fgetc(readBuffer, &posBuffer, &tReadBuffer, database);
             continue;
         }
         
@@ -140,7 +146,8 @@ int main(int argc, char ** av){
             }
             
         }
-		c = fgetc(database);
+		c = buffered_fgetc(readBuffer, &posBuffer, &tReadBuffer, database);
+
 
 	}
 	fprintf(stdout, "[INFO] Sequence of length %"PRIu64" has %"PRIu64" mers of size k=%d\n", pos, pos-KSIZE, KSIZE);
@@ -161,7 +168,7 @@ int main(int argc, char ** av){
 	
 	freeNodesMem(&bpt);
 	free(basePosMem);
-	
+	free(readBuffer);
 	
 	
 	

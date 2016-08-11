@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <emmintrin.h>
+#include <string.h>
 #include "structs.h"
 
 void terror(const char * err_msg){
@@ -231,3 +232,23 @@ void pmemcpy(unsigned char * d, const unsigned char * s, int bytes){
 		d[i] = s[i];
 	}
 }
+
+
+/* Buffered reader to read char by char
+ *  @param buffer: An already allocated buffer of chars
+ *  @param pos: Current position of last char read in buffer (should be initialized to READBUF+1
+ *  @param read: Number of chars read at iteration
+ *	@param f: File descriptor from which to read
+ *	@return: The read char
+ */
+
+char buffered_fgetc(char *buffer, uint64_t *pos, uint64_t *read, FILE *f) {
+    if (*pos >= READBUF) {
+        *pos = 0;
+        memset(buffer, 0, READBUF);
+        *read = fread(buffer, 1, READBUF, f);
+    }
+    *pos = *pos + 1;
+    return buffer[*pos-1];
+}
+

@@ -11,3 +11,4 @@ unsigned char getLastChar(const unsigned char * b);
 unsigned char getFirstChar(const unsigned char * b);
 char bitsToChar(unsigned char b);
 void pmemcpy(unsigned char * d, const unsigned char * s, int bytes);
+char buffered_fgetc(char *buffer, uint64_t *pos, uint64_t *read, FILE *f);
