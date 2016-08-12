@@ -54,65 +54,36 @@ int wordcmp(const unsigned char *w1, const unsigned char *w2, int bytes_to_check
  
 void shift_word_left(unsigned char * b) {
 	
-	/*
-	__m128i copy;
+	
 	__m128i res;
-	__m128i aux; //used to hold the overflown bits
-	unsigned char aux_char[32] = {192,192,192,192, 192,192,192,192, 0,0,0,0, 0,0,0,0}; //remember to kill last one
+	unsigned char * ptr;
 	
-	unsigned char * ptr = (unsigned char *)&res;
-	int k;
-		
-	//Set copy to the current b
-	_mm_store_si128(&copy, *(__m128i *)&b[0]);
-	_mm_store_si128(&aux, *(__m128i *)&aux_char[0]);
+	unsigned char silly_copy[16] = {b[7], b[6], b[5], b[4], b[3], b[2], b[1], b[0], 0,0,0,0,0,0,0,0};
+	_mm_store_si128(&res, *(__m128i *)&silly_copy[0]);
+	//Shift left 2 bits
+	res =  _mm_slli_epi64(res, 2);
 	
-	//Copy overflown bits
-	__m128i tmp = _mm_and_si128(copy, aux);
-	
-	
-	//Shift the overflown elements 6 bits to the right so that they match bit-positions
-	tmp = _mm_srli_epi64(tmp, 6);
-	//Load only the first 8 bytes of the 16 bytes register, but shifting one byte so that we match byte-positions
-	ptr = (unsigned char *)&tmp;
-	ptr+=1; //Skip byte
-	tmp = _mm_loadl_epi64((__m128i *)ptr);
-	
-	printf("Overflown\n");
-	ptr =(unsigned char *) &tmp;
-	for(k=0;k<8;k++){
-		printf("Shift %d: --> (%d)\n", k, *ptr);
-		ptr += 1;
-		getchar();
-	}
-	
-			
-	//Shift 2 bits to the left
-	res = _mm_slli_epi64(copy, 2);
-	res = _mm_or_si128(res, tmp); //OR the overflown elements
-	
-	
-	ptr = (unsigned char *)&res; //Put last 2 bits to zero
-	ptr[BYTES_IN_WORD-1] = ptr[BYTES_IN_WORD-1] & 252;
-	*/
+    /*
     unsigned int i;
     for (i = 0; i < BYTES_IN_WORD - 1; i++) {
         b[i] <<= 2;
         b[i] |= (b[i + 1] >> 6);
     }
     b[BYTES_IN_WORD - 1] <<= 2;
+    */
     
-    /*
-	//printf("Printing the shifting from the __m128 should go %s\n\n", km);
-	printf("Result should be\n");
 	ptr = (unsigned char *) &res;
 	
-	for(k=0;k<8;k++){
-		printf("Shift %d: --> (%d, %d)\n", k, *ptr, b[k]);
-		ptr += 1;
-		getchar();
-	}
-	*/
+	b[0] = ptr[7];
+	b[1] = ptr[6];
+	b[2] = ptr[5];
+	b[3] = ptr[4];
+	b[4] = ptr[3];
+	b[5] = ptr[2];
+	b[6] = ptr[1];
+	b[7] = ptr[0];
+	
+	
 }
 
 

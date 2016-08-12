@@ -11,7 +11,6 @@ int main(int argc, char ** av){
 	if(argc != 3) terror("USE: dictree db dbout");
 	
 	
-	
 	//Database to read kmers from and output dictionary
 	FILE * database, * dout;
 	
@@ -63,21 +62,18 @@ int main(int argc, char ** av){
 	if (readBuffer == NULL) terror("Could not allocate memory for reading buffer");
 
 	c = buffered_fgetc(readBuffer, &posBuffer, &tReadBuffer, database);
-	
-        while (!feof(database) || (feof(database) && posBuffer < tReadBuffer)){
-	// Check if it's a special line
+    while (!feof(database) || (feof(database) && posBuffer < tReadBuffer)){
+		// Check if it's a special line
         if (!isupper(toupper(c))) { // Comment, empty or quality (+) line
             if (c == '>') { // Comment line
-		c = buffered_fgetc(readBuffer, &posBuffer, &tReadBuffer, database);
-                while (c != '\n') c = fgetc(database); //Avoid comment line
-
+				c = buffered_fgetc(readBuffer, &posBuffer, &tReadBuffer, database);
+                while (c != '\n') c = buffered_fgetc(readBuffer, &posBuffer, &tReadBuffer, database); //Avoid comment line
                 //temp.loc.seq++; // New sequence
                 crrSeqL = 0; // Reset buffered sequence length
-
                 pos++; // Absolute coordinates: add one for the "*"
             }
-	    c = buffered_fgetc(readBuffer, &posBuffer, &tReadBuffer, database);
-            continue;
+	    	c = buffered_fgetc(readBuffer, &posBuffer, &tReadBuffer, database); //First char
+        	continue;
         }
         
         if (strandF) shift_word_left(b); // Shift bits sequence
@@ -169,7 +165,6 @@ int main(int argc, char ** av){
 	freeNodesMem(&bpt);
 	free(basePosMem);
 	free(readBuffer);
-	
 	
 	
 	return 0;

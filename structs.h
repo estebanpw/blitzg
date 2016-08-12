@@ -8,6 +8,8 @@
 #define MAX_HEAPS 256
 #pragma pack(push, 1)
 
+
+
 /*
 	I believe I can remove the n_ltable atributte. Would it not be possible to number nodes according 
 	to the maximum size and depth of the tree?
