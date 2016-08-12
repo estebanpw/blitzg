@@ -589,14 +589,16 @@ void traverseTreeAndPositions(Node_N * n, char * baseMem, basePtrTab * bpt){
 
 void writeDictionary(Node_N * n, char * baseMem, FILE * f, basePtrTab * bpt){
 
-	unsigned char word[8];
-	char kmer[32];	
-	memcpy(word, n->b, 8);
-	showWord(word, kmer, KSIZE);
+	
 	
 	if(n->left != 0){
 		writeDictionary(getPointerFromOffset(bpt, n->left, n->llevel), baseMem, f, bpt);
 	} 
+	
+	unsigned char word[8];
+	char kmer[32];	
+	memcpy(word, n->b, 8);
+	showWord(word, kmer, KSIZE);
 	
 	fprintf(f, "%s:*", kmer);
 	traversePosLists(n, baseMem, f);

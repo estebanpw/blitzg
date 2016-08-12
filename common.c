@@ -33,19 +33,19 @@ int wordcmp(const unsigned char *w1, const unsigned char *w2, int bytes_to_check
 	
 	*/
 	
-	
+	/*
 	if(*(uint64_t *)&w1[0] < *(uint64_t *)&w2[0]) return -1;
 	if(*(uint64_t *)&w1[0] > *(uint64_t *)&w2[0]) return 1;
 	return 0;
+	*/
 	
-	/*
 	int i;
 	for (i=0;i<bytes_to_check;i++) {
 		if (w1[i]<w2[i]) return -1;
 		if (w1[i]>w2[i]) return +1;
 	}
 	return 0;
-	*/
+	
 }
 
 /* 	This function is used to shift left bits in a unsigned char array
@@ -82,6 +82,8 @@ void shift_word_left(unsigned char * b) {
 	b[5] = ptr[2];
 	b[6] = ptr[1];
 	b[7] = ptr[0];
+	
+	
 	
 	
 }
